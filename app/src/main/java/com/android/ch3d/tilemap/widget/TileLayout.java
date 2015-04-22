@@ -84,7 +84,6 @@ public class TileLayout extends ViewGroup {
 		for(int i = 0; i < count; i++) {
 			View child = getChildAt(i);
 			if(child.getVisibility() != GONE) {
-				// child.layout((i % GRID_SIZE) * ITEM_SIZE, currentRow * ITEM_SIZE, child.getMeasuredWidth(), child.getMeasuredHeight());
 				child.layout(l1, currentRow * mCurrentChildMaxWidth, child.getMeasuredWidth() + l1,
 				             child.getMeasuredHeight() + (currentRow * mCurrentChildMaxWidth));
 				l1 += mCurrentChildMaxWidth;
@@ -94,36 +93,6 @@ public class TileLayout extends ViewGroup {
 				l1 = 0;
 			}
 		}
-	}
-
-	@Override
-	protected int computeHorizontalScrollExtent() {
-		return 48;
-	}
-
-	@Override
-	protected int computeHorizontalScrollOffset() {
-		return 10;
-	}
-
-	@Override
-	protected int computeHorizontalScrollRange() {
-		return getWidth();
-	}
-
-	@Override
-	protected int computeVerticalScrollExtent() {
-		return getHeight() / 2;
-	}
-
-	@Override
-	protected int computeVerticalScrollOffset() {
-		return getHeight() / 2;
-	}
-
-	@Override
-	protected int computeVerticalScrollRange() {
-		return getHeight();
 	}
 
 	@Override
