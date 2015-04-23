@@ -5,7 +5,7 @@ android {
     buildToolsVersion "22.0.0"
 
     defaultConfig {
-        applicationId "tilemap.ch3d.android.com.tilemap"
+        applicationId "com.android.ch3d.tilemap"
         minSdkVersion 15
         targetSdkVersion 21
         versionCode 1
