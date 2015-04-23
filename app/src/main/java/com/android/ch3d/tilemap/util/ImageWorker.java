@@ -25,7 +25,6 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.os.AsyncTask;
-import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.widget.ImageView;
 
@@ -134,8 +133,7 @@ public abstract class ImageWorker {
 	 * Adds an {@link ImageCacheBase} to this {@link ImageWorker} to handle disk and memory bitmap
 	 * caching.
 	 *
-	 * @param fragmentManager
-	 * @param cache           The cache to use for the image cache.
+	 * @param cache The cache to use for the image cache.
 	 */
 	public void addImageCache(ImageCache cache) {
 		mImageCache = cache;
@@ -190,7 +188,7 @@ public abstract class ImageWorker {
 	 * Load an image specified by the data parameter into an ImageView (override
 	 * {@link ImageWorker#processBitmap(Object)} to define the processing logic). A memory and
 	 * disk cache will be used if an {@link ImageCacheSimple} has been added using
-	 * {@link ImageWorker#addImageCache(android.support.v4.app.FragmentManager, ImageCache)}. If the
+	 * {@link ImageWorker#addImageCache(ImageCache)}. If the
 	 * image is found in the memory cache, it is set immediately, otherwise an {@link AsyncTask}
 	 * will be created to asynchronously load the bitmap.
 	 *
