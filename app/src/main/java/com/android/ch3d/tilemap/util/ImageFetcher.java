@@ -26,6 +26,7 @@ import android.widget.Toast;
 
 import com.android.ch3d.tilemap.BuildConfig;
 import com.android.ch3d.tilemap.R;
+import com.android.ch3d.tilemap.util.cache.ImageCacheBase;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -41,6 +42,17 @@ import java.net.URL;
  * A simple subclass of {@link ImageResizer} that fetches and resizes images fetched from a URL.
  */
 public class ImageFetcher extends ImageResizer {
+	/**
+	 * Workaround for bug pre-Froyo, see here for more info:
+	 * http://android-developers.blogspot.com/2011/09/androids-http-clients.html
+	 */
+	public static void disableConnectionReuseIfNecessary() {
+		// HTTP connection reuse which was buggy pre-froyo
+		if(Build.VERSION.SDK_INT < Build.VERSION_CODES.FROYO) {
+			System.setProperty("http.keepAlive", "false");
+		}
+	}
+
 	private static final String TAG = "ImageFetcher";
 
 	private static final int HTTP_CACHE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -82,34 +94,18 @@ public class ImageFetcher extends ImageResizer {
 		init(context);
 	}
 
-	private void init(Context context) {
-		checkConnection(context);
-		mHttpCacheDir = ImageCache.getDiskCacheDir(context, HTTP_CACHE_DIR);
-	}
-
-	@Override
-	protected void initDiskCacheInternal() {
-		super.initDiskCacheInternal();
-		initHttpDiskCache();
-	}
-
-	private void initHttpDiskCache() {
-		if(!mHttpCacheDir.exists()) {
-			mHttpCacheDir.mkdirs();
-		}
-		synchronized(mHttpDiskCacheLock) {
-			if(ImageCache.getUsableSpace(mHttpCacheDir) > HTTP_CACHE_SIZE) {
-				try {
-					mHttpDiskCache = DiskLruCache.open(mHttpCacheDir, 1, 1, HTTP_CACHE_SIZE);
-					if(BuildConfig.DEBUG) {
-						Log.d(TAG, "HTTP cache initialized");
-					}
-				} catch(IOException e) {
-					mHttpDiskCache = null;
-				}
-			}
-			mHttpDiskCacheStarting = false;
-			mHttpDiskCacheLock.notifyAll();
+	/**
+	 * Simple network connection check.
+	 *
+	 * @param context
+	 */
+	private void checkConnection(Context context) {
+		final ConnectivityManager cm =
+				(ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+		final NetworkInfo networkInfo = cm.getActiveNetworkInfo();
+		if(networkInfo == null || !networkInfo.isConnectedOrConnecting()) {
+			Toast.makeText(context, R.string.no_network_connection_toast, Toast.LENGTH_LONG).show();
+			Log.e(TAG, "checkConnection - no connection found");
 		}
 	}
 
@@ -129,23 +125,6 @@ public class ImageFetcher extends ImageResizer {
 				mHttpDiskCache = null;
 				mHttpDiskCacheStarting = true;
 				initHttpDiskCache();
-			}
-		}
-	}
-
-	@Override
-	protected void flushCacheInternal() {
-		super.flushCacheInternal();
-		synchronized(mHttpDiskCacheLock) {
-			if(mHttpDiskCache != null) {
-				try {
-					mHttpDiskCache.flush();
-					if(BuildConfig.DEBUG) {
-						Log.d(TAG, "HTTP cache flushed");
-					}
-				} catch(IOException e) {
-					Log.e(TAG, "flush - " + e);
-				}
 			}
 		}
 	}
@@ -171,17 +150,92 @@ public class ImageFetcher extends ImageResizer {
 	}
 
 	/**
-	 * Simple network connection check.
+	 * Download a bitmap from a URL and write the content to an output stream.
 	 *
-	 * @param context
+	 * @param urlString The URL to fetch
+	 * @return true if successful, false otherwise
 	 */
-	private void checkConnection(Context context) {
-		final ConnectivityManager cm =
-				(ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-		final NetworkInfo networkInfo = cm.getActiveNetworkInfo();
-		if(networkInfo == null || !networkInfo.isConnectedOrConnecting()) {
-			Toast.makeText(context, R.string.no_network_connection_toast, Toast.LENGTH_LONG).show();
-			Log.e(TAG, "checkConnection - no connection found");
+	public boolean downloadUrlToStream(String urlString, OutputStream outputStream) {
+		disableConnectionReuseIfNecessary();
+		HttpURLConnection urlConnection = null;
+		BufferedOutputStream out = null;
+		BufferedInputStream in = null;
+
+		try {
+			final URL url = new URL(urlString);
+			urlConnection = (HttpURLConnection) url.openConnection();
+			in = new BufferedInputStream(urlConnection.getInputStream(), IO_BUFFER_SIZE);
+			out = new BufferedOutputStream(outputStream, IO_BUFFER_SIZE);
+
+			int b;
+			while((b = in.read()) != -1) {
+				out.write(b);
+			}
+			return true;
+		} catch(final IOException e) {
+			Log.e(TAG, "Error in downloadBitmap - " + e);
+		} finally {
+			if(urlConnection != null) {
+				urlConnection.disconnect();
+			}
+			try {
+				if(out != null) {
+					out.close();
+				}
+				if(in != null) {
+					in.close();
+				}
+			} catch(final IOException e) {
+			}
+		}
+		return false;
+	}
+
+	@Override
+	protected void flushCacheInternal() {
+		super.flushCacheInternal();
+		synchronized(mHttpDiskCacheLock) {
+			if(mHttpDiskCache != null) {
+				try {
+					mHttpDiskCache.flush();
+					if(BuildConfig.DEBUG) {
+						Log.d(TAG, "HTTP cache flushed");
+					}
+				} catch(IOException e) {
+					Log.e(TAG, "flush - " + e);
+				}
+			}
+		}
+	}
+
+	private void init(Context context) {
+		checkConnection(context);
+		mHttpCacheDir = ImageCacheBase.getDiskCacheDir(context, HTTP_CACHE_DIR);
+	}
+
+	@Override
+	protected void initDiskCacheInternal() {
+		super.initDiskCacheInternal();
+		initHttpDiskCache();
+	}
+
+	private void initHttpDiskCache() {
+		if(!mHttpCacheDir.exists()) {
+			mHttpCacheDir.mkdirs();
+		}
+		synchronized(mHttpDiskCacheLock) {
+			if(ImageCacheBase.getUsableSpace(mHttpCacheDir) > HTTP_CACHE_SIZE) {
+				try {
+					mHttpDiskCache = DiskLruCache.open(mHttpCacheDir, 1, 1, HTTP_CACHE_SIZE);
+					if(BuildConfig.DEBUG) {
+						Log.d(TAG, "HTTP cache initialized");
+					}
+				} catch(IOException e) {
+					mHttpDiskCache = null;
+				}
+			}
+			mHttpDiskCacheStarting = false;
+			mHttpDiskCacheLock.notifyAll();
 		}
 	}
 
@@ -197,7 +251,7 @@ public class ImageFetcher extends ImageResizer {
 			Log.d(TAG, "processBitmap - " + data);
 		}
 
-		final String key = ImageCache.hashKeyForDisk(data);
+		final String key = ImageCacheBase.hashKeyForDisk(data);
 		FileDescriptor fileDescriptor = null;
 		FileInputStream fileInputStream = null;
 		DiskLruCache.Snapshot snapshot;
@@ -265,58 +319,5 @@ public class ImageFetcher extends ImageResizer {
 	@Override
 	protected Bitmap processBitmap(Object data) {
 		return processBitmap(String.valueOf(data));
-	}
-
-	/**
-	 * Download a bitmap from a URL and write the content to an output stream.
-	 *
-	 * @param urlString The URL to fetch
-	 * @return true if successful, false otherwise
-	 */
-	public boolean downloadUrlToStream(String urlString, OutputStream outputStream) {
-		disableConnectionReuseIfNecessary();
-		HttpURLConnection urlConnection = null;
-		BufferedOutputStream out = null;
-		BufferedInputStream in = null;
-
-		try {
-			final URL url = new URL(urlString);
-			urlConnection = (HttpURLConnection) url.openConnection();
-			in = new BufferedInputStream(urlConnection.getInputStream(), IO_BUFFER_SIZE);
-			out = new BufferedOutputStream(outputStream, IO_BUFFER_SIZE);
-
-			int b;
-			while((b = in.read()) != -1) {
-				out.write(b);
-			}
-			return true;
-		} catch(final IOException e) {
-			Log.e(TAG, "Error in downloadBitmap - " + e);
-		} finally {
-			if(urlConnection != null) {
-				urlConnection.disconnect();
-			}
-			try {
-				if(out != null) {
-					out.close();
-				}
-				if(in != null) {
-					in.close();
-				}
-			} catch(final IOException e) {
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * Workaround for bug pre-Froyo, see here for more info:
-	 * http://android-developers.blogspot.com/2011/09/androids-http-clients.html
-	 */
-	public static void disableConnectionReuseIfNecessary() {
-		// HTTP connection reuse which was buggy pre-froyo
-		if(Build.VERSION.SDK_INT < Build.VERSION_CODES.FROYO) {
-			System.setProperty("http.keepAlive", "false");
-		}
 	}
 }

@@ -25,6 +25,7 @@ import android.os.Build;
 import android.util.Log;
 
 import com.android.ch3d.tilemap.BuildConfig;
+import com.android.ch3d.tilemap.util.cache.ImageCache;
 
 import java.io.FileDescriptor;
 
@@ -34,75 +35,6 @@ import java.io.FileDescriptor;
  * memory.
  */
 public class ImageResizer extends ImageWorker {
-	private static final String TAG = "ImageResizer";
-
-	protected int mImageWidth;
-
-	protected int mImageHeight;
-
-	/**
-	 * Initialize providing a single target image size (used for both width and height);
-	 *
-	 * @param context
-	 * @param imageWidth
-	 * @param imageHeight
-	 */
-	public ImageResizer(Context context, int imageWidth, int imageHeight) {
-		super(context);
-		setImageSize(imageWidth, imageHeight);
-	}
-
-	/**
-	 * Initialize providing a single target image size (used for both width and height);
-	 *
-	 * @param context
-	 * @param imageSize
-	 */
-	public ImageResizer(Context context, int imageSize) {
-		super(context);
-		setImageSize(imageSize);
-	}
-
-	/**
-	 * Set the target image width and height.
-	 *
-	 * @param width
-	 * @param height
-	 */
-	public void setImageSize(int width, int height) {
-		mImageWidth = width;
-		mImageHeight = height;
-	}
-
-	/**
-	 * Set the target image size (width and height will be the same).
-	 *
-	 * @param size
-	 */
-	public void setImageSize(int size) {
-		setImageSize(size, size);
-	}
-
-	/**
-	 * The main processing method. This happens in a background task. In this case we are just
-	 * sampling down the bitmap and returning it from a resource.
-	 *
-	 * @param resId
-	 * @return
-	 */
-	private Bitmap processBitmap(int resId) {
-		if(BuildConfig.DEBUG) {
-			Log.d(TAG, "processBitmap - " + resId);
-		}
-		return decodeSampledBitmapFromResource(mResources, resId, mImageWidth,
-		                                       mImageHeight, getImageCache());
-	}
-
-	@Override
-	protected Bitmap processBitmap(Object data) {
-		return processBitmap(Integer.parseInt(String.valueOf(data)));
-	}
-
 	/**
 	 * Decode and sample down a bitmap from resources to the requested width and height.
 	 *
@@ -268,5 +200,74 @@ public class ImageResizer extends ImageWorker {
 		}
 		return inSampleSize;
 		// END_INCLUDE (calculate_sample_size)
+	}
+
+	private static final String TAG = "ImageResizer";
+
+	protected int mImageWidth;
+
+	protected int mImageHeight;
+
+	/**
+	 * Initialize providing a single target image size (used for both width and height);
+	 *
+	 * @param context
+	 * @param imageWidth
+	 * @param imageHeight
+	 */
+	public ImageResizer(Context context, int imageWidth, int imageHeight) {
+		super(context);
+		setImageSize(imageWidth, imageHeight);
+	}
+
+	/**
+	 * Initialize providing a single target image size (used for both width and height);
+	 *
+	 * @param context
+	 * @param imageSize
+	 */
+	public ImageResizer(Context context, int imageSize) {
+		super(context);
+		setImageSize(imageSize);
+	}
+
+	/**
+	 * The main processing method. This happens in a background task. In this case we are just
+	 * sampling down the bitmap and returning it from a resource.
+	 *
+	 * @param resId
+	 * @return
+	 */
+	private Bitmap processBitmap(int resId) {
+		if(BuildConfig.DEBUG) {
+			Log.d(TAG, "processBitmap - " + resId);
+		}
+		return decodeSampledBitmapFromResource(mResources, resId, mImageWidth,
+		                                       mImageHeight, getImageCache());
+	}
+
+	@Override
+	protected Bitmap processBitmap(Object data) {
+		return processBitmap(Integer.parseInt(String.valueOf(data)));
+	}
+
+	/**
+	 * Set the target image width and height.
+	 *
+	 * @param width
+	 * @param height
+	 */
+	public void setImageSize(int width, int height) {
+		mImageWidth = width;
+		mImageHeight = height;
+	}
+
+	/**
+	 * Set the target image size (width and height will be the same).
+	 *
+	 * @param size
+	 */
+	public void setImageSize(int size) {
+		setImageSize(size, size);
 	}
 }

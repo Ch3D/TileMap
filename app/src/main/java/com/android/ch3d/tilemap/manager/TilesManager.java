@@ -6,8 +6,9 @@ import android.util.DisplayMetrics;
 import android.widget.ImageView;
 
 import com.android.ch3d.tilemap.provider.TilesProvider;
-import com.android.ch3d.tilemap.util.ImageCache;
 import com.android.ch3d.tilemap.util.ImageFetcher;
+import com.android.ch3d.tilemap.util.cache.ImageCacheBase;
+import com.android.ch3d.tilemap.util.cache.ImageCacheSimple;
 
 /**
  * Created by Ch3D on 22.04.2015.
@@ -28,9 +29,17 @@ public class TilesManager {
 		initImageCache(context);
 	}
 
+	public void closeCache() {
+		mImageFetcher.closeCache();
+	}
+
+	public void flushCache() {
+		mImageFetcher.flushCache();
+	}
+
 	private void initImageCache(FragmentActivity context) {
-		ImageCache.ImageCacheParams cacheParams =
-				new ImageCache.ImageCacheParams(context, IMAGE_CACHE_DIR);
+		ImageCacheBase.ImageCacheParams cacheParams =
+				new ImageCacheBase.ImageCacheParams(context, IMAGE_CACHE_DIR);
 		cacheParams.setMemCacheSizePercent(0.25f); // Set memory cache to 25% of app memory
 
 		final DisplayMetrics displayMetrics = new DisplayMetrics();
@@ -41,7 +50,7 @@ public class TilesManager {
 		final int longest = (height > width ? height : width) / 2;
 
 		mImageFetcher = new ImageFetcher(context, longest);
-		mImageFetcher.addImageCache(context.getSupportFragmentManager(), cacheParams);
+		mImageFetcher.addImageCache(ImageCacheSimple.getInstance(context.getSupportFragmentManager(), cacheParams));
 		mImageFetcher.setImageFadeIn(true);
 
 	}
@@ -56,13 +65,5 @@ public class TilesManager {
 
 	public void setExitTasksEarly(final boolean exitTasksEarly) {
 		mImageFetcher.setExitTasksEarly(exitTasksEarly);
-	}
-
-	public void flushCache() {
-		mImageFetcher.flushCache();
-	}
-
-	public void closeCache() {
-		mImageFetcher.closeCache();
 	}
 }
