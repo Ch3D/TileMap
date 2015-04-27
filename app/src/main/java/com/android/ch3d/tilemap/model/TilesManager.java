@@ -41,7 +41,7 @@ public class TilesManager {
 	private void initImageCache(FragmentActivity context) {
 		ImageCacheBase.ImageCacheParams cacheParams =
 				new ImageCacheBase.ImageCacheParams(context, IMAGE_CACHE_DIR);
-		cacheParams.setMemCacheSizePercent(0.25f); // Set memory cache to 25% of app memory
+		cacheParams.setMemCacheSizePercent(0.25f);
 
 		final DisplayMetrics displayMetrics = new DisplayMetrics();
 		context.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);

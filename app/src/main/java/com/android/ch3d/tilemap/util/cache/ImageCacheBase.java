@@ -62,8 +62,7 @@ public abstract class ImageCacheBase implements ImageCache {
 
 		public void setMemCacheSizePercent(float percent) {
 			if(percent < 0.01f || percent > 0.8f) {
-				throw new IllegalArgumentException("setMemCacheSizePercent - percent must be "
-						                                   + "between 0.01 and 0.8 (inclusive)");
+				throw new IllegalArgumentException("setMemCacheSizePercent - percent must be between 0.01 and 0.8 (inclusive)");
 			}
 			memCacheSize = Math.round(percent * Runtime.getRuntime().maxMemory() / 1024);
 		}
