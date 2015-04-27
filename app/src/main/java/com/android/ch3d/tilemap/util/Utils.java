@@ -22,11 +22,7 @@ import android.os.Build.VERSION_CODES;
 /**
  * Class containing some static utility methods.
  */
-public class Utils {
-	private Utils() {}
-
-	;
-
+public final class Utils {
 	public static boolean hasGingerbread() {
 		return Build.VERSION.SDK_INT >= VERSION_CODES.GINGERBREAD;
 	}
@@ -46,4 +42,6 @@ public class Utils {
 	public static boolean hasKitKat() {
 		return Build.VERSION.SDK_INT >= VERSION_CODES.KITKAT;
 	}
+
+	private Utils() {}
 }

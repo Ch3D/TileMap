@@ -24,7 +24,7 @@ public class TileLayout extends ViewGroup {
 		void onVisibleRectangleChanged(Rect mRect);
 	}
 
-	public static final int GRID_SIZE = 10;
+	public static final boolean DEBUG = BuildConfig.DEBUG;
 
 	private static final String TAG = TileLayout.class.getSimpleName();
 
@@ -45,6 +45,8 @@ public class TileLayout extends ViewGroup {
 	private int mDisplayWidth;
 
 	private TilesManager mTilesManager;
+
+	private int mGridSize = 0;
 
 	public TileLayout(final Context context) {
 		super(context);
@@ -71,7 +73,15 @@ public class TileLayout extends ViewGroup {
 		super.addView(child, new LayoutParams(256, 256));
 	}
 
-	private int getChildIndex(final int i, final int j) {return (j * GRID_SIZE) + i;}
+	private int getChildIndex(final int i, final int j) {return (j * mGridSize) + i;}
+
+	public int getGridSize() {
+		return mGridSize;
+	}
+
+	public void setGridSize(final int gridSize) {
+		mGridSize = gridSize;
+	}
 
 	private void init() {
 		setWillNotDraw(false);
@@ -90,12 +100,10 @@ public class TileLayout extends ViewGroup {
 		for(int i = 0; i < count; i++) {
 			final ImageView child = new ImageView(getContext());
 			addView(child);
-			child.setBackgroundColor(Color.RED);
+			if(DEBUG) {
+				child.setBackgroundColor(Color.RED);
+			}
 		}
-	}
-
-	public void initTiles() {
-		updateVisibleTiles(0, 0, mDisplayWidth, mDisplayHeight);
 	}
 
 	@Override
@@ -110,7 +118,7 @@ public class TileLayout extends ViewGroup {
 				             child.getMeasuredHeight() + (currentRow * mItemSize));
 				l1 += mItemSize;
 			}
-			if((i % GRID_SIZE) == GRID_SIZE - 1) {
+			if((i % mGridSize) == mGridSize - 1) {
 				currentRow++;
 				l1 = 0;
 			}
@@ -121,7 +129,7 @@ public class TileLayout extends ViewGroup {
 	protected void onMeasure(final int widthMeasureSpec, final int heightMeasureSpec) {
 		measureChildren(widthMeasureSpec, heightMeasureSpec);
 
-		setMeasuredDimension(GRID_SIZE * mItemSize, GRID_SIZE * mItemSize);
+		setMeasuredDimension(mGridSize * mItemSize, mGridSize * mItemSize);
 	}
 
 	@Override
@@ -156,19 +164,23 @@ public class TileLayout extends ViewGroup {
 				break;
 
 			case MotionEvent.ACTION_UP:
+				final int right = mXPos + mDisplayWidth;
+				final int bottom = mYPos + mDisplayHeight;
+
 				if(mListener != null) {
-					final int right = mXPos + mDisplayWidth;
-					final int bottom = mYPos + mDisplayHeight;
-
 					mListener.onVisibleRectangleChanged(new Rect(mXPos, mYPos, right, bottom));
-
-					updateVisibleTiles(mXPos, mYPos, right, bottom);
 				}
+
+				updateVisibleTiles(mXPos, mYPos, right, bottom);
 				mTouchX = -1;
 				mTouchY = -1;
 				break;
 		}
 		return true;
+	}
+
+	public void renderTiles() {
+		updateVisibleTiles(0, 0, mDisplayWidth, mDisplayHeight);
 	}
 
 	public void setTilesManager(final TilesManager tilesManager) {

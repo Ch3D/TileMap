@@ -4,29 +4,17 @@ package com.android.ch3d.tilemap.model;
  * Created by Ch3D on 22.04.2015.
  */
 public class Tile {
-	public Tile(int x, int y, String imgUrl) {
-		mX = x;
-		mY = y;
-		mImgUrl = imgUrl;
-	}
-
-	public int getX() {
-		return mX;
-	}
-
-	public int getY() {
-		return mY;
-	}
-
-	public String getImgUrl() {
-		return mImgUrl;
-	}
-
 	private final int mX;
 
 	private final int mY;
 
 	private final String mImgUrl;
+
+	Tile(int x, int y, String imgUrl) {
+		mX = x;
+		mY = y;
+		mImgUrl = imgUrl;
+	}
 
 	@Override
 	public boolean equals(final Object o) {
@@ -50,6 +38,18 @@ public class Tile {
 		}
 
 		return true;
+	}
+
+	public String getImgUrl() {
+		return mImgUrl;
+	}
+
+	public int getX() {
+		return mX;
+	}
+
+	public int getY() {
+		return mY;
 	}
 
 	@Override
