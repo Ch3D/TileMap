@@ -159,12 +159,7 @@ public abstract class ImageCacheBase implements ImageCache {
 		if(Utils.hasKitKat()) {
 			return bitmap.getAllocationByteCount();
 		}
-		if(Utils.hasHoneycombMR1()) {
-			return bitmap.getByteCount();
-		}
-
-		// Pre HC-MR1
-		return bitmap.getRowBytes() * bitmap.getHeight();
+		return bitmap.getByteCount();
 	}
 
 	@TargetApi(Build.VERSION_CODES.GINGERBREAD)
@@ -196,7 +191,7 @@ public abstract class ImageCacheBase implements ImageCache {
 
 	private static final boolean DEFAULT_INIT_DISK_CACHE_ON_CREATE = true;
 
-	private static final int DEFAULT_MEM_CACHE_SIZE = 1024 * 5; // 5MB
+	private static final int DEFAULT_MEM_CACHE_SIZE = 1024 * 8; // 5MB
 
 	private static final int DEFAULT_DISK_CACHE_SIZE = 1024 * 1024 * 10; // 10MB
 
@@ -207,6 +202,8 @@ public abstract class ImageCacheBase implements ImageCache {
 	protected LruCache<String, BitmapDrawable> mMemoryCache;
 
 	protected Set<SoftReference<Bitmap>> mReusableBitmaps;
+
+	protected ImageCacheBase.ImageCacheParams mCacheParams;
 
 	@Override
 	public BitmapDrawable getBitmapFromMemCache(final String data) {
@@ -245,5 +242,10 @@ public abstract class ImageCacheBase implements ImageCache {
 		}
 
 		return bitmap;
+	}
+
+	@Override
+	public ImageCacheParams getParams() {
+		return mCacheParams;
 	}
 }

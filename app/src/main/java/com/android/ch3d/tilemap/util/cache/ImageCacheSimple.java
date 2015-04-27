@@ -36,8 +36,6 @@ public class ImageCacheSimple extends ImageCacheBase {
 		return imageCache;
 	}
 
-	private ImageCacheBase.ImageCacheParams mCacheParams;
-
 	private final Object mDiskCacheLock = new Object();
 
 	private static final String TAG = ImageCacheSimple.class.getSimpleName();
@@ -108,10 +106,6 @@ public class ImageCacheSimple extends ImageCacheBase {
 
 	@Override
 	public Bitmap getBitmapFromDiskCache(final String data) {
-		if(mClosed) {
-			throw new IllegalStateException("ImageCache is already closed");
-		}
-
 		final String key = hashKeyForDisk(data);
 		Bitmap bitmap = null;
 
@@ -121,8 +115,13 @@ public class ImageCacheSimple extends ImageCacheBase {
 				if(DEBUG) {
 					Log.d(TAG, "Disk cache hit");
 				}
-				mCacheParams.diskCacheDir.list();
-				inputStream = new FileInputStream(getFileForKey(key));
+
+				final File fileForKey = getFileForKey(key);
+				if(!fileForKey.exists()) {
+					return null;
+				}
+
+				inputStream = new FileInputStream(fileForKey);
 				if(inputStream != null) {
 					FileDescriptor fd = ((FileInputStream) inputStream).getFD();
 					// provide MAX_VALUE to skip sampling
@@ -142,7 +141,9 @@ public class ImageCacheSimple extends ImageCacheBase {
 		}
 	}
 
-	private File getFileForKey(final String key) {return new File(mCacheParams.diskCacheDir + "/" + key);}
+	private File getFileForKey(final String key) {
+		return new File(mCacheParams.diskCacheDir + "/" + key);
+	}
 
 	private void init(final ImageCacheBase.ImageCacheParams cacheParams) {
 		mCacheParams = cacheParams;

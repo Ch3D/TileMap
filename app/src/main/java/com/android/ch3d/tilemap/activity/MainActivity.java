@@ -4,7 +4,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
 import com.android.ch3d.tilemap.R;
-import com.android.ch3d.tilemap.manager.TilesManager;
+import com.android.ch3d.tilemap.model.TilesManager;
 import com.android.ch3d.tilemap.provider.OpenCycleCapTileProvider;
 import com.android.ch3d.tilemap.widget.TileLayout;
 

@@ -21,6 +21,9 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+/**
+ * Created by Ch3D on 24.04.2015.
+ */
 public class ImageDownloader extends ImageResizer {
 	private static final String TAG = ImageDownloader.class.getSimpleName();
 

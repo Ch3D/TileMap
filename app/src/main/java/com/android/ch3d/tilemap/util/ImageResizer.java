@@ -11,6 +11,9 @@ import com.android.ch3d.tilemap.util.cache.ImageCache;
 
 import java.io.FileDescriptor;
 
+/**
+ * Created by Ch3D on 23.04.2015.
+ */
 public class ImageResizer extends ImageWorker {
 	public static Bitmap decodeSampledBitmapFromResource(Resources res, int resId, int reqWidth, int reqHeight, ImageCache cache) {
 		final BitmapFactory.Options options = new BitmapFactory.Options();

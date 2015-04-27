@@ -33,6 +33,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Created by Ch3D on 23.04.2015.
+ */
 public final class DiskLruCache implements Closeable {
 	private final class Entry {
 		private final String key;
@@ -309,8 +312,7 @@ public final class DiskLruCache implements Closeable {
 			try {
 				cache.readJournal();
 				cache.processJournal();
-				cache.journalWriter = new BufferedWriter(new FileWriter(cache.journalFile, true),
-				                                         IO_BUFFER_SIZE);
+				cache.journalWriter = new BufferedWriter(new FileWriter(cache.journalFile, true), IO_BUFFER_SIZE);
 				return cache;
 			} catch(IOException journalIsCorrupt) {
 				Log.e(TAG, "DiskLruCache " + directory + " is corrupt: " + journalIsCorrupt.getMessage() + ", removing");

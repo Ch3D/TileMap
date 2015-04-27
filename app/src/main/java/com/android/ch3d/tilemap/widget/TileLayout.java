@@ -1,7 +1,6 @@
 package com.android.ch3d.tilemap.widget;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -12,7 +11,7 @@ import android.widget.ImageView;
 
 import com.android.ch3d.tilemap.BuildConfig;
 import com.android.ch3d.tilemap.R;
-import com.android.ch3d.tilemap.manager.TilesManager;
+import com.android.ch3d.tilemap.model.TilesManager;
 import com.android.ch3d.tilemap.util.Utils;
 
 /**
@@ -102,11 +101,7 @@ public class TileLayout extends ViewGroup {
 
 	public void initSize(final int count) {
 		for(int i = 0; i < count; i++) {
-			final ImageView child = new ImageView(getContext());
-			addView(child);
-			if(DEBUG) {
-				child.setBackgroundColor(Color.RED);
-			}
+			addView(new ImageView(getContext()));
 		}
 	}
 
@@ -210,8 +205,8 @@ public class TileLayout extends ViewGroup {
 			Log.d(TAG, "Visible tiles y = [" + topIndexY + ", " + bottomIndexY + "]");
 		}
 
-		for(int i = leftIndexX; i < (rightIndexX + 1); i++) {
-			for(int j = topIndexY; j < (bottomIndexY + 1); j++) {
+		for(int i = leftIndexX; i < (rightIndexX + 2); i++) {
+			for(int j = topIndexY; j < (bottomIndexY + 2); j++) {
 				if(BuildConfig.DEBUG) {
 					Log.d(TAG, "Trying to load tile for [" + i + ", " + j + "]");
 				}

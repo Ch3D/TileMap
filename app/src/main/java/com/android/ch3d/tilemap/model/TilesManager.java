@@ -1,4 +1,4 @@
-package com.android.ch3d.tilemap.manager;
+package com.android.ch3d.tilemap.model;
 
 import android.content.Context;
 import android.support.v4.app.FragmentActivity;
@@ -7,6 +7,7 @@ import android.widget.ImageView;
 
 import com.android.ch3d.tilemap.provider.TilesProvider;
 import com.android.ch3d.tilemap.util.ImageDownloader;
+import com.android.ch3d.tilemap.util.ImageWorker;
 import com.android.ch3d.tilemap.util.cache.ImageCacheBase;
 import com.android.ch3d.tilemap.util.cache.ImageCacheFactory;
 
@@ -17,7 +18,7 @@ public class TilesManager {
 
 	private static final String IMAGE_CACHE_DIR = "images";
 
-	private ImageDownloader mImageDownloader;
+	private ImageWorker mImageDownloader;
 
 	private final Context mContext;
 

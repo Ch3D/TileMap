@@ -56,6 +56,8 @@ public interface ImageCache {
 	 */
 	Bitmap getBitmapFromReusableSet(BitmapFactory.Options options);
 
+	ImageCacheBase.ImageCacheParams getParams();
+
 	/**
 	 * Initializes the disk cache.  Note that this includes disk access so this should not be
 	 * executed on the main/UI thread. By default an ImageCache does not initialize the disk

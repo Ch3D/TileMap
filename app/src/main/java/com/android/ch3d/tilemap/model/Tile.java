@@ -1,7 +1,7 @@
 package com.android.ch3d.tilemap.model;
 
 /**
- * Created by Ch3D on 22.04.2015.
+ * Created by Ch3D on 23.04.2015.
  */
 public class Tile {
 	private final int mX;

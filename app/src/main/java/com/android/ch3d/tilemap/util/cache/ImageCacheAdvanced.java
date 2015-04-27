@@ -25,7 +25,6 @@ import android.util.Log;
 import com.android.ch3d.tilemap.BuildConfig;
 import com.android.ch3d.tilemap.util.DiskLruCache;
 import com.android.ch3d.tilemap.util.ImageResizer;
-import com.android.ch3d.tilemap.util.Utils;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -38,6 +37,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Created by Ch3D on 24.04.2015.
+ */
 public class ImageCacheAdvanced extends ImageCacheBase {
 
 	public static final boolean DEBUG = BuildConfig.DEBUG;
@@ -57,10 +59,6 @@ public class ImageCacheAdvanced extends ImageCacheBase {
 	private static final int DISK_CACHE_INDEX = 0;
 
 	private DiskLruCache mDiskLruCache;
-
-	private LruCache<String, BitmapDrawable> mMemoryCache;
-
-	private ImageCacheParams mCacheParams;
 
 	private final Object mDiskCacheLock = new Object();
 
@@ -228,14 +226,10 @@ public class ImageCacheAdvanced extends ImageCacheBase {
 			if(DEBUG) {
 				Log.d(TAG, "Memory cache created (size = " + mCacheParams.memCacheSize + ")");
 			}
-			if(Utils.hasHoneycomb()) {
-				mReusableBitmaps =
-						Collections.synchronizedSet(new HashSet<SoftReference<Bitmap>>());
-			}
+			mReusableBitmaps = Collections.synchronizedSet(new HashSet<SoftReference<Bitmap>>());
 			mMemoryCache = new LruCache<String, BitmapDrawable>(mCacheParams.memCacheSize) {
 				@Override
-				protected void entryRemoved(boolean evicted, String key,
-				                            BitmapDrawable oldValue, BitmapDrawable newValue) {
+				protected void entryRemoved(boolean evicted, String key, BitmapDrawable oldValue, BitmapDrawable newValue) {
 					mReusableBitmaps.add(new SoftReference<Bitmap>(oldValue.getBitmap()));
 				}
 
@@ -262,8 +256,7 @@ public class ImageCacheAdvanced extends ImageCacheBase {
 					}
 					if(getUsableSpace(diskCacheDir) > mCacheParams.diskCacheSize) {
 						try {
-							mDiskLruCache = DiskLruCache.open(
-									diskCacheDir, 1, 1, mCacheParams.diskCacheSize);
+							mDiskLruCache = DiskLruCache.open(diskCacheDir, BuildConfig.VERSION_CODE, 1, mCacheParams.diskCacheSize);
 							if(DEBUG) {
 								Log.d(TAG, "Disk cache initialized");
 							}
