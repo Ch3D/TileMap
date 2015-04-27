@@ -59,10 +59,6 @@ public class TilesManager {
 		mImageFetcher.loadImage(mTilesProvider.getTile(x, y).getImgUrl(), imageView);
 	}
 
-	public void loadTile(int x, int y) {
-		loadTile(x, y, null);
-	}
-
 	public void setExitTasksEarly(final boolean exitTasksEarly) {
 		mImageFetcher.setExitTasksEarly(exitTasksEarly);
 	}
