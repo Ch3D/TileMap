@@ -6,9 +6,9 @@ import android.util.DisplayMetrics;
 import android.widget.ImageView;
 
 import com.android.ch3d.tilemap.provider.TilesProvider;
-import com.android.ch3d.tilemap.util.ImageFetcher;
+import com.android.ch3d.tilemap.util.ImageDownloader;
 import com.android.ch3d.tilemap.util.cache.ImageCacheBase;
-import com.android.ch3d.tilemap.util.cache.ImageCacheSimple;
+import com.android.ch3d.tilemap.util.cache.ImageCacheFactory;
 
 /**
  * Created by Ch3D on 22.04.2015.
@@ -17,7 +17,7 @@ public class TilesManager {
 
 	private static final String IMAGE_CACHE_DIR = "images";
 
-	private ImageFetcher mImageFetcher;
+	private ImageDownloader mImageDownloader;
 
 	private final Context mContext;
 
@@ -30,11 +30,11 @@ public class TilesManager {
 	}
 
 	public void closeCache() {
-		mImageFetcher.closeCache();
+		mImageDownloader.closeCache();
 	}
 
 	public void flushCache() {
-		mImageFetcher.flushCache();
+		mImageDownloader.flushCache();
 	}
 
 	private void initImageCache(FragmentActivity context) {
@@ -49,17 +49,19 @@ public class TilesManager {
 
 		final int longest = (height > width ? height : width) / 2;
 
-		mImageFetcher = new ImageFetcher(context, longest);
-		mImageFetcher.addImageCache(ImageCacheSimple.getInstance(context.getSupportFragmentManager(), cacheParams));
-		mImageFetcher.setImageFadeIn(true);
+		mImageDownloader = new ImageDownloader(context, longest);
+		mImageDownloader.addImageCache(ImageCacheFactory.getInstance(ImageCacheBase.CACHE_TYPE_SIMPLE,
+		                                                             context.getSupportFragmentManager(),
+		                                                             cacheParams));
+		mImageDownloader.setImageFadeIn(true);
 
 	}
 
 	public void loadTile(int x, int y, ImageView imageView) {
-		mImageFetcher.loadImage(mTilesProvider.getTile(x, y).getImgUrl(), imageView);
+		mImageDownloader.loadImage(mTilesProvider.getTile(x, y).getImgUrl(), imageView);
 	}
 
 	public void setExitTasksEarly(final boolean exitTasksEarly) {
-		mImageFetcher.setExitTasksEarly(exitTasksEarly);
+		mImageDownloader.setExitTasksEarly(exitTasksEarly);
 	}
 }

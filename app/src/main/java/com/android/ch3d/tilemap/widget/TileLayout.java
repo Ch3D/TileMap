@@ -2,7 +2,6 @@ package com.android.ch3d.tilemap.widget;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -14,15 +13,12 @@ import android.widget.ImageView;
 import com.android.ch3d.tilemap.BuildConfig;
 import com.android.ch3d.tilemap.R;
 import com.android.ch3d.tilemap.manager.TilesManager;
+import com.android.ch3d.tilemap.util.Utils;
 
 /**
  * Created by Ch3D on 22.04.2015.
  */
 public class TileLayout extends ViewGroup {
-
-	public interface OnVisibleRectangleListener {
-		void onVisibleRectangleChanged(Rect mRect);
-	}
 
 	public static final boolean DEBUG = BuildConfig.DEBUG;
 
@@ -38,8 +34,6 @@ public class TileLayout extends ViewGroup {
 
 	private float mTouchY = -1;
 
-	private OnVisibleRectangleListener mListener;
-
 	private int mDisplayHeight;
 
 	private int mDisplayWidth;
@@ -47,6 +41,20 @@ public class TileLayout extends ViewGroup {
 	private TilesManager mTilesManager;
 
 	private int mGridSize = 0;
+
+	private int mLastLeftIndexX;
+
+	private int mLastRightIndexX;
+
+	private int mLastTopIndexY;
+
+	private int mLastBottomIndexY;
+
+	private int mToolbarHeight;
+
+	private int mStatusBarHeight;
+
+	private int mNavBarHeight;
 
 	public TileLayout(final Context context) {
 		super(context);
@@ -70,18 +78,10 @@ public class TileLayout extends ViewGroup {
 
 	@Override
 	public void addView(final View child) {
-		super.addView(child, new LayoutParams(256, 256));
+		super.addView(child, new LayoutParams(mItemSize, mItemSize));
 	}
 
 	private int getChildIndex(final int i, final int j) {return (j * mGridSize) + i;}
-
-	public int getGridSize() {
-		return mGridSize;
-	}
-
-	public void setGridSize(final int gridSize) {
-		mGridSize = gridSize;
-	}
 
 	private void init() {
 		setWillNotDraw(false);
@@ -90,6 +90,10 @@ public class TileLayout extends ViewGroup {
 		setHorizontalScrollBarEnabled(true);
 
 		mItemSize = getResources().getDimensionPixelSize(R.dimen.item_size);
+		mToolbarHeight = getResources().getDimensionPixelSize(R.dimen.toolbar_height);
+		// mStatusBarHeight = Utils.getStatusBarHeight(getContext());
+		mStatusBarHeight = 0;
+		mNavBarHeight = Utils.getNavigationBarHeight(getContext());
 
 		final DisplayMetrics displayMetrics = getContext().getResources().getDisplayMetrics();
 		mDisplayHeight = displayMetrics.heightPixels;
@@ -152,7 +156,8 @@ public class TileLayout extends ViewGroup {
 				mYPos += difY;
 
 				final int newX = Math.max(0, Math.min(mXPos, getMeasuredWidth() - mDisplayWidth));
-				final int newY = Math.max(0, Math.min(mYPos, getMeasuredHeight() - mDisplayHeight));
+				final int newY = Math.max(0, Math.min(mYPos, getMeasuredHeight() - mDisplayHeight + mToolbarHeight + mStatusBarHeight
+						+ mNavBarHeight));
 
 				if(getScrollX() != newX || getScrollY() != newY) {
 					scrollTo(newX, newY);
@@ -167,10 +172,6 @@ public class TileLayout extends ViewGroup {
 				final int right = mXPos + mDisplayWidth;
 				final int bottom = mYPos + mDisplayHeight;
 
-				if(mListener != null) {
-					mListener.onVisibleRectangleChanged(new Rect(mXPos, mYPos, right, bottom));
-				}
-
 				updateVisibleTiles(mXPos, mYPos, right, bottom);
 				mTouchX = -1;
 				mTouchY = -1;
@@ -183,12 +184,12 @@ public class TileLayout extends ViewGroup {
 		updateVisibleTiles(0, 0, mDisplayWidth, mDisplayHeight);
 	}
 
-	public void setTilesManager(final TilesManager tilesManager) {
-		mTilesManager = tilesManager;
+	public void setGridSize(final int gridSize) {
+		mGridSize = gridSize;
 	}
 
-	public void setVisibleRectangleListener(OnVisibleRectangleListener listener) {
-		mListener = listener;
+	public void setTilesManager(final TilesManager tilesManager) {
+		mTilesManager = tilesManager;
 	}
 
 	private void updateVisibleTiles(final int left, final int top, final int right, final int bottom) {
@@ -196,6 +197,13 @@ public class TileLayout extends ViewGroup {
 		final int rightIndexX = right / mItemSize;
 		final int topIndexY = top / mItemSize;
 		final int bottomIndexY = bottom / mItemSize;
+
+		if(mLastBottomIndexY == bottomIndexY && mLastLeftIndexX == leftIndexX &&
+				mLastRightIndexX == rightIndexX && mLastTopIndexY == topIndexY) {
+			// skip
+			Log.d(TAG, "Skip tiles update");
+			return;
+		}
 
 		if(BuildConfig.DEBUG) {
 			Log.d(TAG, "Visible tiles x = [" + leftIndexX + ", " + rightIndexX + "]");
@@ -213,6 +221,11 @@ public class TileLayout extends ViewGroup {
 				}
 			}
 		}
+
+		mLastLeftIndexX = leftIndexX;
+		mLastRightIndexX = rightIndexX;
+		mLastTopIndexY = topIndexY;
+		mLastBottomIndexY = bottomIndexY;
 	}
 
 }

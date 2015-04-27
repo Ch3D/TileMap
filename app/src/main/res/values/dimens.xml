@@ -1,3 +1,4 @@
 <resources>
     <dimen name="item_size">256px</dimen>
+    <dimen name="toolbar_height">56px</dimen>
 </resources>

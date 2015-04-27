@@ -5,14 +5,14 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.android.ch3d.tilemap.R;
 import com.android.ch3d.tilemap.manager.TilesManager;
-import com.android.ch3d.tilemap.provider.SimpleTileProvider;
+import com.android.ch3d.tilemap.provider.OpenCycleCapTileProvider;
 import com.android.ch3d.tilemap.widget.TileLayout;
 
 public class MainActivity extends AppCompatActivity {
 
 	private TileLayout mTilesLayout;
 
-	private SimpleTileProvider mTilesProvider;
+	private OpenCycleCapTileProvider mTilesProvider;
 
 	private TilesManager mTilesManager;
 
@@ -23,7 +23,7 @@ public class MainActivity extends AppCompatActivity {
 
 		mTilesLayout = (TileLayout) findViewById(R.id.tiles);
 		mTilesLayout.setGridSize(getResources().getInteger(R.integer.config_tiles_grid_size));
-		mTilesProvider = new SimpleTileProvider();
+		mTilesProvider = new OpenCycleCapTileProvider();
 		mTilesManager = new TilesManager(this, mTilesProvider);
 		mTilesLayout.setTilesManager(mTilesManager);
 		mTilesLayout.initSize(getResources().getInteger(R.integer.config_tiles_count));

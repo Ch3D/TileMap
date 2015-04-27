@@ -11,17 +11,27 @@ import android.os.Environment;
 import android.os.StatFs;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.util.LruCache;
+import android.util.Log;
 
+import com.android.ch3d.tilemap.BuildConfig;
 import com.android.ch3d.tilemap.util.Utils;
 
 import java.io.File;
+import java.lang.ref.SoftReference;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Created by Ch3D on 23.04.2015.
  */
 public abstract class ImageCacheBase implements ImageCache {
+
+	public static final int CACHE_TYPE_SIMPLE = 1;
+
+	public static final int CACHE_TYPE_ADVANCED = 2;
 
 	public static class RetainFragment extends Fragment {
 		private Object mObject;
@@ -46,6 +56,18 @@ public abstract class ImageCacheBase implements ImageCache {
 	public static class ImageCacheParams {
 		public File diskCacheDir;
 
+		public ImageCacheParams(Context context, String diskCacheDirectoryName) {
+			diskCacheDir = getDiskCacheDir(context, diskCacheDirectoryName);
+		}
+
+		public void setMemCacheSizePercent(float percent) {
+			if(percent < 0.01f || percent > 0.8f) {
+				throw new IllegalArgumentException("setMemCacheSizePercent - percent must be "
+						                                   + "between 0.01 and 0.8 (inclusive)");
+			}
+			memCacheSize = Math.round(percent * Runtime.getRuntime().maxMemory() / 1024);
+		}
+
 		public int memCacheSize = DEFAULT_MEM_CACHE_SIZE;
 
 		public int diskCacheSize = DEFAULT_DISK_CACHE_SIZE;
@@ -60,17 +82,6 @@ public abstract class ImageCacheBase implements ImageCache {
 
 		public boolean initDiskCacheOnCreate = DEFAULT_INIT_DISK_CACHE_ON_CREATE;
 
-		public ImageCacheParams(Context context, String diskCacheDirectoryName) {
-			diskCacheDir = getDiskCacheDir(context, diskCacheDirectoryName);
-		}
-
-		public void setMemCacheSizePercent(float percent) {
-			if(percent < 0.01f || percent > 0.8f) {
-				throw new IllegalArgumentException("setMemCacheSizePercent - percent must be "
-						                                   + "between 0.01 and 0.8 (inclusive)");
-			}
-			memCacheSize = Math.round(percent * Runtime.getRuntime().maxMemory() / 1024);
-		}
 	}
 
 	@TargetApi(Build.VERSION_CODES.KITKAT)
@@ -192,4 +203,47 @@ public abstract class ImageCacheBase implements ImageCache {
 	private static final Bitmap.CompressFormat DEFAULT_COMPRESS_FORMAT = Bitmap.CompressFormat.JPEG;
 
 	private static final int DEFAULT_COMPRESS_QUALITY = 70;
+
+	protected LruCache<String, BitmapDrawable> mMemoryCache;
+
+	protected Set<SoftReference<Bitmap>> mReusableBitmaps;
+
+	@Override
+	public BitmapDrawable getBitmapFromMemCache(final String data) {
+		BitmapDrawable memValue = null;
+		if(mMemoryCache != null) {
+			memValue = mMemoryCache.get(data);
+		}
+		if(BuildConfig.DEBUG && memValue != null) {
+			Log.d(TAG, "Memory cache hit");
+		}
+		return memValue;
+	}
+
+	@Override
+	public Bitmap getBitmapFromReusableSet(final BitmapFactory.Options options) {
+		Bitmap bitmap = null;
+
+		if(mReusableBitmaps != null && !mReusableBitmaps.isEmpty()) {
+			synchronized(mReusableBitmaps) {
+				final Iterator<SoftReference<Bitmap>> iterator = mReusableBitmaps.iterator();
+				Bitmap item;
+
+				while(iterator.hasNext()) {
+					item = iterator.next().get();
+					if(null != item && item.isMutable()) {
+						if(canUseForInBitmap(item, options)) {
+							bitmap = item;
+							iterator.remove();
+							break;
+						}
+					} else {
+						iterator.remove();
+					}
+				}
+			}
+		}
+
+		return bitmap;
+	}
 }

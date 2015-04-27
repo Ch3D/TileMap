@@ -6,6 +6,7 @@
         <item name="colorPrimary">#ffaaaa</item>
         <item name="colorPrimaryDark">#ff0000</item>
         <item name="colorAccent">#00ff00</item>
+        <item name="android:windowBackground">@null</item>
     </style>
 
     <style name="default_item">
