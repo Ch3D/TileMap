@@ -176,7 +176,7 @@ public class TileLayout extends ViewGroup {
 	}
 
 	public void renderTiles() {
-		updateVisibleTiles(0, 0, mDisplayWidth, mDisplayHeight);
+		updateVisibleTiles(mXPos, mYPos, mDisplayWidth, mDisplayHeight);
 	}
 
 	public void setGridSize(final int gridSize) {

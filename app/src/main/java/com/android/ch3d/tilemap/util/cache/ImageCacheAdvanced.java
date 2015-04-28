@@ -25,6 +25,7 @@ import android.util.Log;
 import com.android.ch3d.tilemap.BuildConfig;
 import com.android.ch3d.tilemap.util.DiskLruCache;
 import com.android.ch3d.tilemap.util.ImageResizer;
+import com.android.ch3d.tilemap.util.Utils;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -90,8 +91,7 @@ public class ImageCacheAdvanced extends ImageCacheBase {
 						final DiskLruCache.Editor editor = mDiskLruCache.edit(key);
 						if(editor != null) {
 							out = editor.newOutputStream(DISK_CACHE_INDEX);
-							value.getBitmap().compress(
-									mCacheParams.compressFormat, mCacheParams.compressQuality, out);
+							value.getBitmap().compress(mCacheParams.compressFormat, mCacheParams.compressQuality, out);
 							editor.commit();
 							out.close();
 						}
@@ -103,12 +103,7 @@ public class ImageCacheAdvanced extends ImageCacheBase {
 				} catch(Exception e) {
 					Log.e(TAG, "addBitmapToCache - " + e);
 				} finally {
-					try {
-						if(out != null) {
-							out.close();
-						}
-					} catch(IOException e) {
-					}
+					Utils.close(out);
 				}
 			}
 		}
@@ -207,12 +202,7 @@ public class ImageCacheAdvanced extends ImageCacheBase {
 				} catch(final IOException e) {
 					Log.e(TAG, "getBitmapFromDiskCache - " + e);
 				} finally {
-					try {
-						if(inputStream != null) {
-							inputStream.close();
-						}
-					} catch(IOException e) {
-					}
+					Utils.close(inputStream);
 				}
 			}
 			return bitmap;

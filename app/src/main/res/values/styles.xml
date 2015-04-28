@@ -1,20 +1,10 @@
 <resources>
 
-    <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat">
-        <!-- Customize your theme here. -->
-        <item name="colorPrimary">#ffaaaa</item>
+        <item name="android:windowBackground">@null</item>
+        <item name="colorPrimary">#ff7777</item>
         <item name="colorPrimaryDark">#ff0000</item>
         <item name="colorAccent">#00ff00</item>
-        <item name="android:windowBackground">@null</item>
-    </style>
-
-    <style name="default_item">
-
-        <item name="android:textAppearance">?android:textAppearanceLarge</item>
-        <item name="android:gravity">center</item>
-        <item name="android:layout_width">@dimen/item_size</item>
-        <item name="android:layout_height">@dimen/item_size</item>
     </style>
 
 </resources>

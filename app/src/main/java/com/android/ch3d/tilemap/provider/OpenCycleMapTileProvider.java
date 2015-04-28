@@ -6,7 +6,7 @@ import com.android.ch3d.tilemap.model.TileFactory;
 /**
  * Created by Ch3D on 22.04.2015.
  */
-public class OpenCycleCapTileProvider implements TilesProvider {
+public class OpenCycleMapTileProvider implements TilesProvider {
 
 	public static final String TILE_IMG_URL = "http://b.tile.opencyclemap.org/cycle/15/%s/%s.png";
 

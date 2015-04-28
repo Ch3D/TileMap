@@ -20,6 +20,10 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.Build.VERSION_CODES;
+import android.util.Log;
+
+import java.io.Closeable;
+import java.io.IOException;
 
 /**
  * Created by Ch3D on 23.04.2015.
@@ -35,6 +39,16 @@ public final class Utils {
 
 	public static boolean hasKitKat() {
 		return Build.VERSION.SDK_INT >= VERSION_CODES.KITKAT;
+	}
+
+	public static void close(Closeable closeable) {
+		if(closeable != null) {
+			try {
+				closeable.close();
+			} catch(IOException e) {
+				Log.e(TAG, "close", e);
+			}
+		}
 	}
 
 	public static int getStatusBarHeight(Context context) {
@@ -54,6 +68,8 @@ public final class Utils {
 		}
 		return 0;
 	}
+
+	private static final String TAG = Utils.class.getSimpleName();
 
 	private Utils() {}
 }

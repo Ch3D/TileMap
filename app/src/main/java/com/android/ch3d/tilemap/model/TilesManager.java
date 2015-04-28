@@ -6,7 +6,7 @@ import android.util.DisplayMetrics;
 import android.widget.ImageView;
 
 import com.android.ch3d.tilemap.provider.TilesProvider;
-import com.android.ch3d.tilemap.util.ImageDownloader;
+import com.android.ch3d.tilemap.util.downloader.ImageDownloaderSimple;
 import com.android.ch3d.tilemap.util.ImageWorker;
 import com.android.ch3d.tilemap.util.cache.ImageCacheBase;
 import com.android.ch3d.tilemap.util.cache.ImageCacheFactory;
@@ -50,7 +50,7 @@ public class TilesManager {
 
 		final int longest = (height > width ? height : width) / 2;
 
-		mImageDownloader = new ImageDownloader(context, longest);
+		mImageDownloader = new ImageDownloaderSimple(context, longest);
 		mImageDownloader.addImageCache(ImageCacheFactory.getInstance(ImageCacheBase.CACHE_TYPE_SIMPLE,
 		                                                             context.getSupportFragmentManager(),
 		                                                             cacheParams));

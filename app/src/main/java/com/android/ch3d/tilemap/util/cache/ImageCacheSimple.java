@@ -68,13 +68,7 @@ public class ImageCacheSimple extends ImageCacheBase {
 			} catch(Exception e) {
 				Log.e(TAG, "addBitmapToCache", e);
 			} finally {
-				try {
-					if(out != null) {
-						out.close();
-					}
-				} catch(IOException e) {
-					Log.e(TAG, "addBitmapToCache", e);
-				}
+				Utils.close(out);
 			}
 		}
 	}
@@ -130,19 +124,14 @@ public class ImageCacheSimple extends ImageCacheBase {
 			} catch(final IOException e) {
 				Log.e(TAG, "getBitmapFromDiskCache - " + e);
 			} finally {
-				try {
-					if(inputStream != null) {
-						inputStream.close();
-					}
-				} catch(IOException e) {
-				}
+				Utils.close(inputStream);
 			}
 			return bitmap;
 		}
 	}
 
 	private File getFileForKey(final String key) {
-		return new File(mCacheParams.diskCacheDir + "/" + key);
+		return new File(mCacheParams.diskCacheDir + File.separator + key);
 	}
 
 	private void init(final ImageCacheBase.ImageCacheParams cacheParams) {

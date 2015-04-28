@@ -1,37 +1,30 @@
-package com.android.ch3d.tilemap.util;
+package com.android.ch3d.tilemap.util.downloader;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.android.ch3d.tilemap.BuildConfig;
-import com.android.ch3d.tilemap.R;
+import com.android.ch3d.tilemap.util.DiskLruCache;
+import com.android.ch3d.tilemap.util.ImageResizer;
 import com.android.ch3d.tilemap.util.cache.ImageCacheBase;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+
+import static com.android.ch3d.tilemap.util.Utils.close;
 
 /**
  * Created by Ch3D on 24.04.2015.
  */
-public class ImageDownloader extends ImageResizer {
-	private static final String TAG = ImageDownloader.class.getSimpleName();
+public class ImageDownloaderAdvanced extends ImageDownloaderBase {
+	private static final String TAG = ImageDownloaderAdvanced.class.getSimpleName();
 
 	private static final int HTTP_CACHE_SIZE = 10 * 1024 * 1024; // 10MB
 
 	private static final String HTTP_CACHE_DIR = "http";
-
-	private static final int IO_BUFFER_SIZE = 8 * 1024;
 
 	private DiskLruCache mHttpDiskCache;
 
@@ -39,33 +32,20 @@ public class ImageDownloader extends ImageResizer {
 
 	private boolean mHttpDiskCacheStarting = true;
 
-	private final Object mHttpDiskCacheLock = new Object();
-
 	private static final int DISK_CACHE_INDEX = 0;
 
-	public ImageDownloader(Context context, int imageWidth, int imageHeight) {
+	public ImageDownloaderAdvanced(final Context context, final int imageWidth, final int imageHeight) {
 		super(context, imageWidth, imageHeight);
-		init(context);
 	}
 
-	public ImageDownloader(Context context, int imageSize) {
+	public ImageDownloaderAdvanced(final Context context, final int imageSize) {
 		super(context, imageSize);
-		init(context);
-	}
-
-	private void checkConnection(Context context) {
-		final ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-		final NetworkInfo networkInfo = cm.getActiveNetworkInfo();
-		if(networkInfo == null || !networkInfo.isConnectedOrConnecting()) {
-			Toast.makeText(context, R.string.no_network_connection_toast, Toast.LENGTH_LONG).show();
-			Log.e(TAG, "checkConnection : no internet connection");
-		}
 	}
 
 	@Override
 	protected void clearCacheInternal() {
 		super.clearCacheInternal();
-		synchronized(mHttpDiskCacheLock) {
+		synchronized(mDiskCacheLock) {
 			if(mHttpDiskCache != null && !mHttpDiskCache.isClosed()) {
 				try {
 					mHttpDiskCache.delete();
@@ -85,7 +65,7 @@ public class ImageDownloader extends ImageResizer {
 	@Override
 	protected void closeCacheInternal() {
 		super.closeCacheInternal();
-		synchronized(mHttpDiskCacheLock) {
+		synchronized(mDiskCacheLock) {
 			if(mHttpDiskCache != null) {
 				try {
 					if(!mHttpDiskCache.isClosed()) {
@@ -102,46 +82,10 @@ public class ImageDownloader extends ImageResizer {
 		}
 	}
 
-	public boolean downloadUrlToStream(String urlString, OutputStream outputStream) {
-		HttpURLConnection urlConnection = null;
-		BufferedOutputStream out = null;
-		BufferedInputStream in = null;
-
-		try {
-			final URL url = new URL(urlString);
-			urlConnection = (HttpURLConnection) url.openConnection();
-			in = new BufferedInputStream(urlConnection.getInputStream(), IO_BUFFER_SIZE);
-			out = new BufferedOutputStream(outputStream, IO_BUFFER_SIZE);
-
-			int b;
-			while((b = in.read()) != -1) {
-				out.write(b);
-			}
-			return true;
-		} catch(final IOException e) {
-			Log.e(TAG, "downloadUrlToStream", e);
-		} finally {
-			if(urlConnection != null) {
-				urlConnection.disconnect();
-			}
-			try {
-				if(out != null) {
-					out.close();
-				}
-				if(in != null) {
-					in.close();
-				}
-			} catch(final IOException e) {
-				Log.e(TAG, "downloadUrlToStream", e);
-			}
-		}
-		return false;
-	}
-
 	@Override
 	protected void flushCacheInternal() {
 		super.flushCacheInternal();
-		synchronized(mHttpDiskCacheLock) {
+		synchronized(mDiskCacheLock) {
 			if(mHttpDiskCache != null) {
 				try {
 					mHttpDiskCache.flush();
@@ -155,7 +99,8 @@ public class ImageDownloader extends ImageResizer {
 		}
 	}
 
-	private void init(Context context) {
+	@Override
+	protected void init(Context context) {
 		checkConnection(context);
 		mHttpCacheDir = ImageCacheBase.getDiskCacheDir(context, HTTP_CACHE_DIR);
 	}
@@ -170,7 +115,7 @@ public class ImageDownloader extends ImageResizer {
 		if(!mHttpCacheDir.exists()) {
 			mHttpCacheDir.mkdirs();
 		}
-		synchronized(mHttpDiskCacheLock) {
+		synchronized(mDiskCacheLock) {
 			if(ImageCacheBase.getUsableSpace(mHttpCacheDir) > HTTP_CACHE_SIZE) {
 				try {
 					mHttpDiskCache = DiskLruCache.open(mHttpCacheDir, 1, 1, HTTP_CACHE_SIZE);
@@ -182,11 +127,12 @@ public class ImageDownloader extends ImageResizer {
 				}
 			}
 			mHttpDiskCacheStarting = false;
-			mHttpDiskCacheLock.notifyAll();
+			mDiskCacheLock.notifyAll();
 		}
 	}
 
-	private Bitmap processBitmap(String data) {
+	@Override
+	protected Bitmap processBitmap(String data) {
 		if(BuildConfig.DEBUG) {
 			Log.d(TAG, "processing bitmap = " + data);
 		}
@@ -195,10 +141,10 @@ public class ImageDownloader extends ImageResizer {
 		FileDescriptor fileDescriptor = null;
 		FileInputStream fileInputStream = null;
 		DiskLruCache.Snapshot snapshot;
-		synchronized(mHttpDiskCacheLock) {
+		synchronized(mDiskCacheLock) {
 			while(mHttpDiskCacheStarting) {
 				try {
-					mHttpDiskCacheLock.wait();
+					mDiskCacheLock.wait();
 				} catch(InterruptedException e) {
 					Log.e(TAG, "processBitmap", e);
 				}
@@ -231,11 +177,7 @@ public class ImageDownloader extends ImageResizer {
 					Log.e(TAG, "processBitmap", e);
 				} finally {
 					if(fileDescriptor == null && fileInputStream != null) {
-						try {
-							fileInputStream.close();
-						} catch(IOException e) {
-							Log.e(TAG, "processBitmap", e);
-						}
+						close(fileInputStream);
 					}
 				}
 			}
@@ -243,20 +185,10 @@ public class ImageDownloader extends ImageResizer {
 
 		Bitmap bitmap = null;
 		if(fileDescriptor != null) {
-			bitmap = decodeSampledBitmapFromDescriptor(fileDescriptor, mImageWidth, mImageHeight, getImageCache());
+			bitmap = ImageResizer.decodeSampledBitmapFromDescriptor(fileDescriptor, mImageWidth, mImageHeight, getImageCache());
 		}
-		if(fileInputStream != null) {
-			try {
-				fileInputStream.close();
-			} catch(IOException e) {
-				Log.e(TAG, "processBitmap", e);
-			}
-		}
+		close(fileInputStream);
 		return bitmap;
 	}
 
-	@Override
-	protected Bitmap processBitmap(Object data) {
-		return processBitmap(String.valueOf(data));
-	}
 }
