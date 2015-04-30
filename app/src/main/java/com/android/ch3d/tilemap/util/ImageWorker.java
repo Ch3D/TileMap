@@ -8,6 +8,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.os.AsyncTask;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.ImageView;
 
@@ -21,27 +22,32 @@ import java.lang.ref.WeakReference;
  */
 public abstract class ImageWorker {
 
-	public static void cancelWork(ImageView imageView) {
-		final BitmapWorkerTask bitmapWorkerTask = getBitmapWorkerTask(imageView);
-		if(bitmapWorkerTask != null) {
-			bitmapWorkerTask.cancel(true);
-			if(BuildConfig.DEBUG) {
-				final Object bitmapData = bitmapWorkerTask.mData;
-				Log.d(TAG, "cancelWork - cancelled work for " + bitmapData);
-			}
-		}
+	private static final String TAG = ImageWorker.class.getSimpleName();
+
+	private ImageCache mImageCache;
+
+	private boolean mPaused = false;
+
+	protected boolean mPauseWork = false;
+
+	private final Object mPauseWorkLock = new Object();
+
+	protected Context mContext;
+
+	protected ImageWorker(Context context) {
+		mContext = context;
 	}
 
-	public static boolean cancelPotentialWork(Object data, ImageView imageView) {
-		final BitmapWorkerTask bitmapWorkerTask = getBitmapWorkerTask(imageView);
+	public void addImageCache(ImageCache cache) {
+		mImageCache = cache;
+	}
 
+	public boolean cancelPotentialWork(Object data, ImageView imageView) {
+		final BitmapWorkerTask bitmapWorkerTask = getBitmapWorkerTask(imageView);
 		if(bitmapWorkerTask != null) {
-			final Object bitmapData = bitmapWorkerTask.mData;
+			final String bitmapData = bitmapWorkerTask.mUrl;
 			if(bitmapData == null || !bitmapData.equals(data)) {
 				bitmapWorkerTask.cancel(true);
-				if(BuildConfig.DEBUG) {
-					Log.d(TAG, "cancelPotentialWork  for " + data);
-				}
 			} else {
 				return false;
 			}
@@ -49,7 +55,7 @@ public abstract class ImageWorker {
 		return true;
 	}
 
-	private static BitmapWorkerTask getBitmapWorkerTask(ImageView imageView) {
+	private BitmapWorkerTask getBitmapWorkerTask(ImageView imageView) {
 		if(imageView != null) {
 			final Drawable drawable = imageView.getDrawable();
 			if(drawable instanceof AsyncDrawable) {
@@ -60,124 +66,39 @@ public abstract class ImageWorker {
 		return null;
 	}
 
-	private static final String TAG = ImageWorker.class.getSimpleName();
-
-	private static final int FADE_IN_TIME = 100;
-
-	private ImageCache mImageCache;
-
-	private boolean mFadeInBitmap = true;
-
-	private boolean mExitTasksEarly = false;
-
-	protected boolean mPauseWork = false;
-
-	private final Object mPauseWorkLock = new Object();
-
-	protected Resources mResources;
-
-	private static final int MESSAGE_CLEAR = 0;
-
-	private static final int MESSAGE_INIT_DISK_CACHE = 1;
-
-	private static final int MESSAGE_FLUSH = 2;
-
-	private static final int MESSAGE_CLOSE = 3;
-
-	protected ImageWorker(Context context) {
-		mResources = context.getResources();
-	}
-
-	public void addImageCache(ImageCache cache) {
-		mImageCache = cache;
-		new CacheAsyncTask().execute(MESSAGE_INIT_DISK_CACHE);
-	}
-
-	public void clearCache() {
-		new CacheAsyncTask().execute(MESSAGE_CLEAR);
-	}
-
-	protected void clearCacheInternal() {
-		if(mImageCache != null) {
-			mImageCache.clearCache();
-		}
-	}
-
-	public void closeCache() {
-		new CacheAsyncTask().execute(MESSAGE_CLOSE);
-	}
-
-	protected void closeCacheInternal() {
-		if(mImageCache != null) {
-			mImageCache.close();
-			mImageCache = null;
-		}
-	}
-
-	public void flushCache() {
-		new CacheAsyncTask().execute(MESSAGE_FLUSH);
-	}
-
-	protected void flushCacheInternal() {
-		if(mImageCache != null) {
-			mImageCache.flush();
-		}
-	}
-
 	protected ImageCache getImageCache() {
 		return mImageCache;
 	}
 
-	protected void initDiskCacheInternal() {
-		if(mImageCache != null) {
-			mImageCache.initDiskCache();
-		}
-	}
-
-	public void loadImage(Object data, ImageView imageView) {
-		if(data == null) {
+	public void loadImage(final String url, final ImageView imageView) {
+		if(url == null) {
 			return;
 		}
 
 		BitmapDrawable value = null;
 		if(mImageCache != null) {
-			value = mImageCache.getBitmapFromMemCache(String.valueOf(data));
+			value = mImageCache.getBitmapFromMemCache(url);
 		}
 
 		if(value != null) {
 			imageView.setImageDrawable(value);
-		} else if(cancelPotentialWork(data, imageView)) {
-			final BitmapWorkerTask task = new BitmapWorkerTask(data, imageView);
-			final AsyncDrawable asyncDrawable = new AsyncDrawable(mResources, null, task);
+		} else if(cancelPotentialWork(url, imageView)) {
+			final BitmapWorkerTask task = new BitmapWorkerTask(imageView);
+			final AsyncDrawable asyncDrawable = new AsyncDrawable(mContext.getResources(), null, task);
 			imageView.setImageDrawable(asyncDrawable);
-			task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+			task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, url);
 		}
 	}
 
-	protected abstract Bitmap processBitmap(Object data);
-
-	public void setExitTasksEarly(boolean exitTasksEarly) {
-		mExitTasksEarly = exitTasksEarly;
-		setPauseWork(false);
-	}
+	protected abstract Bitmap processBitmap(final String url);
 
 	private void setImageDrawable(ImageView imageView, Drawable drawable) {
-		if(mFadeInBitmap) {
-			final TransitionDrawable td =
-					new TransitionDrawable(new Drawable[]{
-							new ColorDrawable(android.R.color.transparent),
-							drawable
-					});
-			imageView.setBackgroundDrawable(null);
-			imageView.setImageDrawable(td);
-			td.startTransition(FADE_IN_TIME);
-		} else {
-			imageView.setImageDrawable(drawable);
-		}
-	}
-
-	public void setImageFadeIn(boolean fadeIn) {
-		mFadeInBitmap = fadeIn;
+		final TransitionDrawable td = new TransitionDrawable(new Drawable[]{
+				new ColorDrawable(android.R.color.transparent),
+				drawable
+		});
+		imageView.setImageDrawable(td);
+		td.startTransition(mContext.getResources().getInteger(android.R.integer.config_shortAnimTime));
 	}
 
 	public void setPauseWork(boolean pauseWork) {
@@ -189,23 +110,27 @@ public abstract class ImageWorker {
 		}
 	}
 
-	private class BitmapWorkerTask extends AsyncTask<Void, Void, BitmapDrawable> {
-		private Object mData;
+	public void setPaused(boolean paused) {
+		mPaused = paused;
+		setPauseWork(false);
+	}
 
+	private class BitmapWorkerTask extends AsyncTask<String, Void, BitmapDrawable> {
 		private final WeakReference<ImageView> imageViewReference;
 
-		public BitmapWorkerTask(Object data, ImageView imageView) {
-			mData = data;
+		private String mUrl;
+
+		public BitmapWorkerTask(ImageView imageView) {
 			imageViewReference = new WeakReference<ImageView>(imageView);
 		}
 
 		@Override
-		protected BitmapDrawable doInBackground(Void... params) {
-			if(BuildConfig.DEBUG) {
-				Log.d(TAG, "doInBackground - starting work");
+		protected BitmapDrawable doInBackground(String... params) {
+			if(params.length == 0 || TextUtils.isEmpty(params[0])) {
+				return null;
 			}
 
-			final String dataString = String.valueOf(mData);
+			mUrl = String.valueOf(params[0]);
 			Bitmap bitmap = null;
 			BitmapDrawable drawable = null;
 
@@ -218,27 +143,20 @@ public abstract class ImageWorker {
 				}
 			}
 
-			if(mImageCache != null && !isCancelled() && getAttachedImageView() != null
-					&& !mExitTasksEarly) {
-				bitmap = mImageCache.getBitmapFromDiskCache(dataString);
+			if(mImageCache != null && !isCancelled() && getAttachedImageView() != null && !mPaused) {
+				bitmap = mImageCache.getBitmapFromDiskCache(mUrl);
 			}
 
-			if(bitmap == null && !isCancelled() && getAttachedImageView() != null
-					&& !mExitTasksEarly) {
-				bitmap = processBitmap(mData);
+			if(bitmap == null && !isCancelled() && getAttachedImageView() != null && !mPaused) {
+				bitmap = processBitmap(mUrl);
 			}
 
 			if(bitmap != null) {
-				drawable = new BitmapDrawable(mResources, bitmap);
+				drawable = new BitmapDrawable(mContext.getResources(), bitmap);
 				if(mImageCache != null) {
-					mImageCache.addBitmapToCache(dataString, drawable);
+					mImageCache.addBitmapToCache(mUrl, drawable);
 				}
 			}
-
-			if(BuildConfig.DEBUG) {
-				Log.d(TAG, "doInBackground - finished work");
-			}
-
 			return drawable;
 		}
 
@@ -249,12 +167,11 @@ public abstract class ImageWorker {
 			if(this == bitmapWorkerTask) {
 				return imageView;
 			}
-
 			return null;
 		}
 
 		@Override
-		protected void onCancelled(BitmapDrawable value) {
+		protected void onCancelled(final BitmapDrawable value) {
 			super.onCancelled(value);
 			synchronized(mPauseWorkLock) {
 				mPauseWorkLock.notifyAll();
@@ -263,7 +180,7 @@ public abstract class ImageWorker {
 
 		@Override
 		protected void onPostExecute(BitmapDrawable value) {
-			if(isCancelled() || mExitTasksEarly) {
+			if(isCancelled() || mPaused) {
 				value = null;
 			}
 
@@ -287,28 +204,6 @@ public abstract class ImageWorker {
 
 		public BitmapWorkerTask getBitmapWorkerTask() {
 			return bitmapWorkerTaskReference.get();
-		}
-	}
-
-	protected class CacheAsyncTask extends AsyncTask<Object, Void, Void> {
-
-		@Override
-		protected Void doInBackground(Object... params) {
-			switch((Integer) params[0]) {
-				case MESSAGE_CLEAR:
-					clearCacheInternal();
-					break;
-				case MESSAGE_INIT_DISK_CACHE:
-					initDiskCacheInternal();
-					break;
-				case MESSAGE_FLUSH:
-					flushCacheInternal();
-					break;
-				case MESSAGE_CLOSE:
-					closeCacheInternal();
-					break;
-			}
-			return null;
 		}
 	}
 }

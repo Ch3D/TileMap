@@ -5,11 +5,12 @@ import android.support.v4.app.FragmentActivity;
 import android.util.DisplayMetrics;
 import android.widget.ImageView;
 
+import com.android.ch3d.tilemap.R;
 import com.android.ch3d.tilemap.provider.TilesProvider;
-import com.android.ch3d.tilemap.util.downloader.ImageDownloaderSimple;
 import com.android.ch3d.tilemap.util.ImageWorker;
 import com.android.ch3d.tilemap.util.cache.ImageCacheBase;
-import com.android.ch3d.tilemap.util.cache.ImageCacheFactory;
+import com.android.ch3d.tilemap.util.cache.ImageCacheSimple;
+import com.android.ch3d.tilemap.util.downloader.ImageDownloader;
 
 /**
  * Created by Ch3D on 22.04.2015.
@@ -30,39 +31,27 @@ public class TilesManager {
 		initImageCache(context);
 	}
 
-	public void closeCache() {
-		mImageDownloader.closeCache();
-	}
-
-	public void flushCache() {
-		mImageDownloader.flushCache();
-	}
-
 	private void initImageCache(FragmentActivity context) {
-		ImageCacheBase.ImageCacheParams cacheParams =
-				new ImageCacheBase.ImageCacheParams(context, IMAGE_CACHE_DIR);
+		ImageCacheBase.ImageCacheParams cacheParams = new ImageCacheBase.ImageCacheParams(context, IMAGE_CACHE_DIR);
 		cacheParams.setMemCacheSizePercent(0.25f);
 
 		final DisplayMetrics displayMetrics = new DisplayMetrics();
 		context.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-		final int height = displayMetrics.heightPixels;
-		final int width = displayMetrics.widthPixels;
 
-		final int longest = (height > width ? height : width) / 2;
-
-		mImageDownloader = new ImageDownloaderSimple(context, longest);
-		mImageDownloader.addImageCache(ImageCacheFactory.getInstance(ImageCacheBase.CACHE_TYPE_SIMPLE,
-		                                                             context.getSupportFragmentManager(),
-		                                                             cacheParams));
-		mImageDownloader.setImageFadeIn(true);
-
+		final int defaultImageSize = mContext.getResources().getDimensionPixelSize(R.dimen.item_size);
+		mImageDownloader = new ImageDownloader(context, defaultImageSize);
+		mImageDownloader.addImageCache(ImageCacheSimple.getInstance(context.getSupportFragmentManager(), cacheParams, defaultImageSize));
 	}
 
 	public void loadTile(int x, int y, ImageView imageView) {
 		mImageDownloader.loadImage(mTilesProvider.getTile(x, y).getImgUrl(), imageView);
 	}
 
-	public void setExitTasksEarly(final boolean exitTasksEarly) {
-		mImageDownloader.setExitTasksEarly(exitTasksEarly);
+	public void onPause() {
+		mImageDownloader.setPaused(true);
+	}
+
+	public void onResume() {
+		mImageDownloader.setPaused(false);
 	}
 }

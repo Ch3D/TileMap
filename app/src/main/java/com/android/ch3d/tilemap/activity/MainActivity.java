@@ -32,20 +32,18 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		mTilesManager.closeCache();
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
-		mTilesManager.setExitTasksEarly(true);
-		mTilesManager.flushCache();
+		mTilesManager.onPause();
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
-		mTilesManager.setExitTasksEarly(false);
+		mTilesManager.onResume();
 		mTilesLayout.renderTiles();
 	}
 }

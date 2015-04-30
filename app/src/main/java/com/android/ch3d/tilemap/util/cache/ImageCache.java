@@ -23,18 +23,6 @@ public interface ImageCache {
 	void clearCache();
 
 	/**
-	 * Closes the disk cache associated with this ImageCache object. Note that this includes
-	 * disk access so this should not be executed on the main/UI thread.
-	 */
-	void close();
-
-	/**
-	 * Flushes the disk cache associated with this ImageCache object. Note that this includes
-	 * disk access so this should not be executed on the main/UI thread.
-	 */
-	void flush();
-
-	/**
 	 * Get from disk cache.
 	 *
 	 * @param data Unique identifier for which item to get
@@ -57,12 +45,4 @@ public interface ImageCache {
 	Bitmap getBitmapFromReusableSet(BitmapFactory.Options options);
 
 	ImageCacheBase.ImageCacheParams getParams();
-
-	/**
-	 * Initializes the disk cache.  Note that this includes disk access so this should not be
-	 * executed on the main/UI thread. By default an ImageCache does not initialize the disk
-	 * cache when it is created, instead you should call initDiskCache() to initialize it on a
-	 * background thread.
-	 */
-	void initDiskCache();
 }

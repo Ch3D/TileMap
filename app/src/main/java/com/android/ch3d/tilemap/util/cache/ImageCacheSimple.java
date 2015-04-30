@@ -7,7 +7,6 @@ import android.support.v4.util.LruCache;
 import android.util.Log;
 
 import com.android.ch3d.tilemap.BuildConfig;
-import com.android.ch3d.tilemap.util.ImageResizer;
 import com.android.ch3d.tilemap.util.Utils;
 
 import java.io.File;
@@ -21,16 +20,18 @@ import java.lang.ref.SoftReference;
 import java.util.Collections;
 import java.util.HashSet;
 
+import static com.android.ch3d.tilemap.util.ImageUtils.decodeSampledBitmapFromDescriptor;
+
 /**
  * Created by Ch3D on 27.04.2015.
  */
 public class ImageCacheSimple extends ImageCacheBase {
 
-	static ImageCacheSimple getInstance(FragmentManager fragmentManager, ImageCacheBase.ImageCacheParams cacheParams) {
+	public static ImageCacheSimple getInstance(FragmentManager fragmentManager, ImageCacheParams cacheParams, final int defaultImageSize) {
 		final ImageCacheBase.RetainFragment mRetainFragment = findOrCreateRetainFragment(fragmentManager);
 		ImageCacheSimple imageCache = (ImageCacheSimple) mRetainFragment.getObject();
 		if(imageCache == null) {
-			imageCache = new ImageCacheSimple(cacheParams);
+			imageCache = new ImageCacheSimple(cacheParams, defaultImageSize);
 			mRetainFragment.setObject(imageCache);
 		}
 		return imageCache;
@@ -42,9 +43,10 @@ public class ImageCacheSimple extends ImageCacheBase {
 
 	private static final boolean DEBUG = BuildConfig.DEBUG;
 
-	private boolean mClosed;
+	private final int mImgSize;
 
-	private ImageCacheSimple(ImageCacheBase.ImageCacheParams cacheParams) {
+	private ImageCacheSimple(ImageCacheBase.ImageCacheParams cacheParams, int imgSize) {
+		mImgSize = imgSize;
 		init(cacheParams);
 	}
 
@@ -84,18 +86,7 @@ public class ImageCacheSimple extends ImageCacheBase {
 
 		synchronized(mDiskCacheLock) {
 			mCacheParams.diskCacheDir.delete();
-			initDiskCache();
 		}
-	}
-
-	@Override
-	public void close() {
-		mClosed = true;
-	}
-
-	@Override
-	public void flush() {
-		// Do nothing
 	}
 
 	@Override
@@ -119,7 +110,7 @@ public class ImageCacheSimple extends ImageCacheBase {
 				if(inputStream != null) {
 					FileDescriptor fd = ((FileInputStream) inputStream).getFD();
 					// provide MAX_VALUE to skip sampling
-					bitmap = ImageResizer.decodeSampledBitmapFromDescriptor(fd, Integer.MAX_VALUE, Integer.MAX_VALUE, this);
+					bitmap = decodeSampledBitmapFromDescriptor(fd, mImgSize, mImgSize, this);
 				}
 			} catch(final IOException e) {
 				Log.e(TAG, "getBitmapFromDiskCache - " + e);
@@ -136,6 +127,8 @@ public class ImageCacheSimple extends ImageCacheBase {
 
 	private void init(final ImageCacheBase.ImageCacheParams cacheParams) {
 		mCacheParams = cacheParams;
+
+		mCacheParams.diskCacheDir.mkdirs();
 
 		if(mCacheParams.memoryCacheEnabled) {
 			if(BuildConfig.DEBUG) {
@@ -158,13 +151,5 @@ public class ImageCacheSimple extends ImageCacheBase {
 				}
 			};
 		}
-		if(cacheParams.initDiskCacheOnCreate) {
-			initDiskCache();
-		}
-	}
-
-	@Override
-	public void initDiskCache() {
-		mCacheParams.diskCacheDir.mkdirs();
 	}
 }

@@ -19,8 +19,6 @@ import com.android.ch3d.tilemap.util.Utils;
  */
 public class TileLayout extends ViewGroup {
 
-	public static final boolean DEBUG = BuildConfig.DEBUG;
-
 	private static final String TAG = TileLayout.class.getSimpleName();
 
 	private int mItemSize = -1;
@@ -90,7 +88,6 @@ public class TileLayout extends ViewGroup {
 
 		mItemSize = getResources().getDimensionPixelSize(R.dimen.item_size);
 		mToolbarHeight = getResources().getDimensionPixelSize(R.dimen.toolbar_height);
-		// mStatusBarHeight = Utils.getStatusBarHeight(getContext());
 		mStatusBarHeight = 0;
 		mNavBarHeight = Utils.getNavigationBarHeight(getContext());
 
@@ -109,17 +106,17 @@ public class TileLayout extends ViewGroup {
 	protected void onLayout(final boolean changed, final int l, final int t, final int r, final int b) {
 		int count = getChildCount();
 		int currentRow = 0;
-		int l1 = 0;
+		int column = 0;
 		for(int i = 0; i < count; i++) {
 			View child = getChildAt(i);
 			if(child.getVisibility() != GONE) {
-				child.layout(l1, currentRow * mItemSize, child.getMeasuredWidth() + l1,
+				child.layout(column, currentRow * mItemSize, child.getMeasuredWidth() + column,
 				             child.getMeasuredHeight() + (currentRow * mItemSize));
-				l1 += mItemSize;
+				column += mItemSize;
 			}
 			if((i % mGridSize) == mGridSize - 1) {
 				currentRow++;
-				l1 = 0;
+				column = 0;
 			}
 		}
 	}

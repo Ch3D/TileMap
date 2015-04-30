@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.util.Log;
 
 import com.android.ch3d.tilemap.BuildConfig;
+import com.android.ch3d.tilemap.util.ImageUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -18,37 +19,18 @@ import static com.android.ch3d.tilemap.util.cache.ImageCacheBase.hashKeyForDisk;
 /**
  * Created by Ch3D on 24.04.2015.
  */
-public class ImageDownloaderSimple extends ImageDownloaderBase {
-	private static final String TAG = ImageDownloaderAdvanced.class.getSimpleName();
+public class ImageDownloader extends ImageDownloaderBase {
 
-	public ImageDownloaderSimple(Context context, int imageWidth, int imageHeight) {
-		super(context, imageWidth, imageHeight);
-		init(context);
-	}
+	private static final String TAG = ImageDownloader.class.getSimpleName();
 
-	public ImageDownloaderSimple(Context context, int imageSize) {
-		super(context, imageSize);
-		init(context);
-	}
+	private final Context mContext;
 
-	@Override
-	protected void closeCacheInternal() {
-		super.closeCacheInternal();
-		synchronized(mDiskCacheLock) {
-			if(BuildConfig.DEBUG) {
-				Log.d(TAG, "HTTP cache closed");
-			}
-		}
-	}
+	private final int mImgSize;
 
-	@Override
-	protected void flushCacheInternal() {
-		super.flushCacheInternal();
-		synchronized(mDiskCacheLock) {
-			if(BuildConfig.DEBUG) {
-				Log.d(TAG, "HTTP cache flushed");
-			}
-		}
+	public ImageDownloader(final Context context, final int imgSize) {
+		super(context);
+		mContext = context;
+		mImgSize = imgSize;
 	}
 
 	private File getFileForKey(final String key) {
@@ -56,26 +38,21 @@ public class ImageDownloaderSimple extends ImageDownloaderBase {
 	}
 
 	@Override
-	protected void init(Context context) {
-		checkConnection(context);
-	}
-
-	@Override
-	protected Bitmap processBitmap(String data) {
+	protected Bitmap processBitmap(String url) {
 		if(BuildConfig.DEBUG) {
-			Log.d(TAG, "processing bitmap = " + data);
+			Log.d(TAG, "processing bitmap = " + url);
 		}
 		synchronized(mDiskCacheLock) {
-			final String key = hashKeyForDisk(data);
+			final String key = hashKeyForDisk(url);
 			FileOutputStream outputStream = null;
 			FileInputStream inputStream = null;
 			try {
 				final File file = getFileForKey(key);
 				file.getParentFile().mkdirs();
 				outputStream = new FileOutputStream(file);
-				if(downloadUrlToStream(data, outputStream)) {
+				if(downloadUrlToStream(url, outputStream)) {
 					inputStream = new FileInputStream(file);
-					return decodeSampledBitmapFromDescriptor(inputStream.getFD(), mImageWidth, mImageHeight, getImageCache());
+					return ImageUtils.decodeSampledBitmapFromDescriptor(inputStream.getFD(), mImgSize, mImgSize, getImageCache());
 				}
 			} catch(FileNotFoundException e) {
 				Log.e(TAG, "processBitmap", e);

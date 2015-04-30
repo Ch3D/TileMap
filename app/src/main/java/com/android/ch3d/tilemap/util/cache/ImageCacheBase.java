@@ -29,10 +29,6 @@ import java.util.Set;
  */
 public abstract class ImageCacheBase implements ImageCache {
 
-	public static final int CACHE_TYPE_SIMPLE = 1;
-
-	public static final int CACHE_TYPE_ADVANCED = 2;
-
 	public static class RetainFragment extends Fragment {
 		private Object mObject;
 
@@ -56,17 +52,6 @@ public abstract class ImageCacheBase implements ImageCache {
 	public static class ImageCacheParams {
 		public File diskCacheDir;
 
-		public ImageCacheParams(Context context, String diskCacheDirectoryName) {
-			diskCacheDir = getDiskCacheDir(context, diskCacheDirectoryName);
-		}
-
-		public void setMemCacheSizePercent(float percent) {
-			if(percent < 0.01f || percent > 0.8f) {
-				throw new IllegalArgumentException("setMemCacheSizePercent - percent must be between 0.01 and 0.8 (inclusive)");
-			}
-			memCacheSize = Math.round(percent * Runtime.getRuntime().maxMemory() / 1024);
-		}
-
 		public int memCacheSize = DEFAULT_MEM_CACHE_SIZE;
 
 		public int diskCacheSize = DEFAULT_DISK_CACHE_SIZE;
@@ -80,6 +65,17 @@ public abstract class ImageCacheBase implements ImageCache {
 		public boolean diskCacheEnabled = DEFAULT_DISK_CACHE_ENABLED;
 
 		public boolean initDiskCacheOnCreate = DEFAULT_INIT_DISK_CACHE_ON_CREATE;
+
+		public ImageCacheParams(Context context, String diskCacheDirectoryName) {
+			diskCacheDir = getDiskCacheDir(context, diskCacheDirectoryName);
+		}
+
+		public void setMemCacheSizePercent(float percent) {
+			if(percent < 0.01f || percent > 0.8f) {
+				throw new IllegalArgumentException("setMemCacheSizePercent - percent must be between 0.01 and 0.8 (inclusive)");
+			}
+			memCacheSize = Math.round(percent * Runtime.getRuntime().maxMemory() / 1024);
+		}
 
 	}
 
