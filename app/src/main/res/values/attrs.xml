@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="TileView">
+        <attr name="tileWidth" format="dimension" />
+        <attr name="tileHeight" format="dimension" />
+        <attr name="rowsCount" format="integer" />
+        <attr name="columnsCount" format="integer" />
+    </declare-styleable>
+</resources>

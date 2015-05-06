@@ -3,6 +3,7 @@ package com.android.ch3d.tilemap.util;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
@@ -22,188 +23,243 @@ import java.lang.ref.WeakReference;
  */
 public abstract class ImageWorker {
 
-	private static final String TAG = ImageWorker.class.getSimpleName();
+    private static final String TAG = ImageWorker.class.getSimpleName();
 
-	private ImageCache mImageCache;
+    private ImageCache mImageCache;
 
-	private boolean mPaused = false;
+    private boolean mPaused = false;
 
-	protected boolean mPauseWork = false;
+    protected boolean mPauseWork = false;
 
-	private final Object mPauseWorkLock = new Object();
+    private final Object mPauseWorkLock = new Object();
 
-	protected Context mContext;
+    protected Context mContext;
 
-	protected ImageWorker(Context context) {
-		mContext = context;
-	}
+    protected ImageWorker(Context context) {
+        mContext = context;
+    }
 
-	public void addImageCache(ImageCache cache) {
-		mImageCache = cache;
-	}
+    public void addImageCache(ImageCache cache) {
+        mImageCache = cache;
+    }
 
-	public boolean cancelPotentialWork(Object data, ImageView imageView) {
-		final BitmapWorkerTask bitmapWorkerTask = getBitmapWorkerTask(imageView);
-		if(bitmapWorkerTask != null) {
-			final String bitmapData = bitmapWorkerTask.mUrl;
-			if(bitmapData == null || !bitmapData.equals(data)) {
-				bitmapWorkerTask.cancel(true);
-			} else {
-				return false;
-			}
-		}
-		return true;
-	}
+    public boolean cancelPotentialWork(Object data, Holder holder) {
+        final BitmapWorkerTask bitmapWorkerTask = getBitmapWorkerTask(holder);
+        if (bitmapWorkerTask != null) {
+            final String bitmapData = bitmapWorkerTask.mUrl;
+            if (bitmapData == null || !bitmapData.equals(data)) {
+                bitmapWorkerTask.cancel(true);
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
 
-	private BitmapWorkerTask getBitmapWorkerTask(ImageView imageView) {
-		if(imageView != null) {
-			final Drawable drawable = imageView.getDrawable();
-			if(drawable instanceof AsyncDrawable) {
-				final AsyncDrawable asyncDrawable = (AsyncDrawable) drawable;
-				return asyncDrawable.getBitmapWorkerTask();
-			}
-		}
-		return null;
-	}
+    private BitmapWorkerTask getBitmapWorkerTask(Holder holder) {
+        if (holder != null) {
+            final Drawable drawable = holder.getDrawable();
+            if (drawable instanceof AsyncDrawable) {
+                final AsyncDrawable asyncDrawable = (AsyncDrawable) drawable;
+                return asyncDrawable.getBitmapWorkerTask();
+            }
+        }
+        return null;
+    }
 
-	protected ImageCache getImageCache() {
-		return mImageCache;
-	}
+    protected ImageCache getImageCache() {
+        return mImageCache;
+    }
 
-	public void loadImage(final String url, final ImageView imageView) {
-		if(url == null) {
-			return;
-		}
+    public void loadImage(final String url, final Holder holder) {
+        if (url == null) {
+            return;
+        }
 
-		BitmapDrawable value = null;
-		if(mImageCache != null) {
-			value = mImageCache.getBitmapFromMemCache(url);
-		}
+        BitmapDrawable value = null;
+        if (mImageCache != null) {
+            value = mImageCache.getBitmapFromMemCache(url);
+        }
 
-		if(value != null) {
-			imageView.setImageDrawable(value);
-		} else if(cancelPotentialWork(url, imageView)) {
-			final BitmapWorkerTask task = new BitmapWorkerTask(imageView);
-			final AsyncDrawable asyncDrawable = new AsyncDrawable(mContext.getResources(), null, task);
-			imageView.setImageDrawable(asyncDrawable);
-			task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, url);
-		}
-	}
+        if (value != null) {
+            holder.getCanvas().drawBitmap(value.getBitmap(), holder.getX() * 256, holder.getY() * 256, null);
+        } else if (cancelPotentialWork(url, holder)) {
+            final BitmapWorkerTask task = new BitmapWorkerTask(holder);
+            final AsyncDrawable asyncDrawable = new AsyncDrawable(mContext.getResources(), null, task);
+            holder.setDrawable(asyncDrawable);
+            task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, url);
+        }
+    }
 
-	protected abstract Bitmap processBitmap(final String url);
+//    public void loadImage(final String url, final ImageView imageView) {
+//        if (url == null) {
+//            return;
+//        }
+//
+//        BitmapDrawable value = null;
+//        if (mImageCache != null) {
+//            value = mImageCache.getBitmapFromMemCache(url);
+//        }
+//
+//        if (value != null) {
+//            imageView.setImageDrawable(value);
+//        } else if (cancelPotentialWork(url, imageView)) {
+//            final BitmapWorkerTask task = new BitmapWorkerTask(imageView);
+//            final AsyncDrawable asyncDrawable = new AsyncDrawable(mContext.getResources(), null, task);
+//            imageView.setImageDrawable(asyncDrawable);
+//            task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, url);
+//        }
+//    }
 
-	private void setImageDrawable(ImageView imageView, Drawable drawable) {
-		final TransitionDrawable td = new TransitionDrawable(new Drawable[]{
-				new ColorDrawable(android.R.color.transparent),
-				drawable
-		});
-		imageView.setImageDrawable(td);
-		td.startTransition(mContext.getResources().getInteger(android.R.integer.config_shortAnimTime));
-	}
+    protected abstract Bitmap processBitmap(final String url);
 
-	public void setPauseWork(boolean pauseWork) {
-		synchronized(mPauseWorkLock) {
-			mPauseWork = pauseWork;
-			if(!mPauseWork) {
-				mPauseWorkLock.notifyAll();
-			}
-		}
-	}
+    private void setImageDrawable(ImageView imageView, Drawable drawable) {
+        final TransitionDrawable td = new TransitionDrawable(new Drawable[]{
+                new ColorDrawable(android.R.color.transparent),
+                drawable
+        });
+        imageView.setImageDrawable(td);
+        td.startTransition(mContext.getResources().getInteger(android.R.integer.config_shortAnimTime));
+    }
 
-	public void setPaused(boolean paused) {
-		mPaused = paused;
-		setPauseWork(false);
-	}
+    public void setPauseWork(boolean pauseWork) {
+        synchronized (mPauseWorkLock) {
+            mPauseWork = pauseWork;
+            if (!mPauseWork) {
+                mPauseWorkLock.notifyAll();
+            }
+        }
+    }
 
-	private class BitmapWorkerTask extends AsyncTask<String, Void, BitmapDrawable> {
-		private final WeakReference<ImageView> imageViewReference;
+    public void setPaused(boolean paused) {
+        mPaused = paused;
+        setPauseWork(false);
+    }
 
-		private String mUrl;
+    public static class Holder {
+        private Drawable drawable;
+        private Canvas canvas;
+        private int x;
 
-		public BitmapWorkerTask(ImageView imageView) {
-			imageViewReference = new WeakReference<ImageView>(imageView);
-		}
+        public int getX() {
+            return x;
+        }
 
-		@Override
-		protected BitmapDrawable doInBackground(String... params) {
-			if(params.length == 0 || TextUtils.isEmpty(params[0])) {
-				return null;
-			}
+        public int getY() {
+            return y;
+        }
 
-			mUrl = String.valueOf(params[0]);
-			Bitmap bitmap = null;
-			BitmapDrawable drawable = null;
+        private int y;
 
-			synchronized(mPauseWorkLock) {
-				while(mPauseWork && !isCancelled()) {
-					try {
-						mPauseWorkLock.wait();
-					} catch(InterruptedException e) {
-					}
-				}
-			}
+        public Holder(Canvas canvas, int x, int y) {
+            this.canvas = canvas;
+            this.x = x;
+            this.y = y;
+        }
 
-			if(mImageCache != null && !isCancelled() && getAttachedImageView() != null && !mPaused) {
-				bitmap = mImageCache.getBitmapFromDiskCache(mUrl);
-			}
+        public Drawable getDrawable() {
+            return drawable;
+        }
 
-			if(bitmap == null && !isCancelled() && getAttachedImageView() != null && !mPaused) {
-				bitmap = processBitmap(mUrl);
-			}
+        public void setDrawable(Drawable drawable) {
+            this.drawable = drawable;
+        }
 
-			if(bitmap != null) {
-				drawable = new BitmapDrawable(mContext.getResources(), bitmap);
-				if(mImageCache != null) {
-					mImageCache.addBitmapToCache(mUrl, drawable);
-				}
-			}
-			return drawable;
-		}
+        public Canvas getCanvas() {
+            return canvas;
+        }
+    }
 
-		private ImageView getAttachedImageView() {
-			final ImageView imageView = imageViewReference.get();
-			final BitmapWorkerTask bitmapWorkerTask = getBitmapWorkerTask(imageView);
+    private class BitmapWorkerTask extends AsyncTask<String, Void, BitmapDrawable> {
+        private final WeakReference<Holder> imageViewReference;
 
-			if(this == bitmapWorkerTask) {
-				return imageView;
-			}
-			return null;
-		}
+        private String mUrl;
 
-		@Override
-		protected void onCancelled(final BitmapDrawable value) {
-			super.onCancelled(value);
-			synchronized(mPauseWorkLock) {
-				mPauseWorkLock.notifyAll();
-			}
-		}
+        public BitmapWorkerTask(Holder holder) {
+            imageViewReference = new WeakReference<Holder>(holder);
+        }
 
-		@Override
-		protected void onPostExecute(BitmapDrawable value) {
-			if(isCancelled() || mPaused) {
-				value = null;
-			}
+        @Override
+        protected BitmapDrawable doInBackground(String... params) {
+            if (params.length == 0 || TextUtils.isEmpty(params[0])) {
+                return null;
+            }
 
-			final ImageView imageView = getAttachedImageView();
-			if(value != null && imageView != null) {
-				if(BuildConfig.DEBUG) {
-					Log.d(TAG, "onPostExecute - setting bitmap");
-				}
-				setImageDrawable(imageView, value);
-			}
-		}
-	}
+            mUrl = String.valueOf(params[0]);
+            Bitmap bitmap = null;
+            BitmapDrawable drawable = null;
 
-	private static class AsyncDrawable extends BitmapDrawable {
-		private final WeakReference<BitmapWorkerTask> bitmapWorkerTaskReference;
+            synchronized (mPauseWorkLock) {
+                while (mPauseWork && !isCancelled()) {
+                    try {
+                        mPauseWorkLock.wait();
+                    } catch (InterruptedException e) {
+                    }
+                }
+            }
 
-		public AsyncDrawable(Resources res, Bitmap bitmap, BitmapWorkerTask bitmapWorkerTask) {
-			super(res, bitmap);
-			bitmapWorkerTaskReference = new WeakReference<BitmapWorkerTask>(bitmapWorkerTask);
-		}
+            if (mImageCache != null && !isCancelled() && getAttachedHolder() != null && !mPaused) {
+                bitmap = mImageCache.getBitmapFromDiskCache(mUrl);
+            }
 
-		public BitmapWorkerTask getBitmapWorkerTask() {
-			return bitmapWorkerTaskReference.get();
-		}
-	}
+            if (bitmap == null && !isCancelled() && getAttachedHolder() != null && !mPaused) {
+                bitmap = processBitmap(mUrl);
+            }
+
+            if (bitmap != null) {
+                drawable = new BitmapDrawable(mContext.getResources(), bitmap);
+                if (mImageCache != null) {
+                    mImageCache.addBitmapToCache(mUrl, drawable);
+                }
+            }
+            return drawable;
+        }
+
+        private Holder getAttachedHolder() {
+            final Holder holder = imageViewReference.get();
+            final BitmapWorkerTask bitmapWorkerTask = getBitmapWorkerTask(holder);
+
+            if (this == bitmapWorkerTask) {
+                return holder;
+            }
+            return null;
+        }
+
+        @Override
+        protected void onCancelled(final BitmapDrawable value) {
+            super.onCancelled(value);
+            synchronized (mPauseWorkLock) {
+                mPauseWorkLock.notifyAll();
+            }
+        }
+
+        @Override
+        protected void onPostExecute(BitmapDrawable value) {
+            if (isCancelled() || mPaused) {
+                value = null;
+            }
+
+            final Holder holder = getAttachedHolder();
+            if (value != null && holder != null) {
+                if (BuildConfig.DEBUG) {
+                    Log.d(TAG, "onPostExecute - setting bitmap");
+                }
+                value.draw(holder.getCanvas());
+                holder.setDrawable(value);
+            }
+        }
+    }
+
+    private static class AsyncDrawable extends BitmapDrawable {
+        private final WeakReference<BitmapWorkerTask> bitmapWorkerTaskReference;
+
+        public AsyncDrawable(Resources res, Bitmap bitmap, BitmapWorkerTask bitmapWorkerTask) {
+            super(res, bitmap);
+            bitmapWorkerTaskReference = new WeakReference<BitmapWorkerTask>(bitmapWorkerTask);
+        }
+
+        public BitmapWorkerTask getBitmapWorkerTask() {
+            return bitmapWorkerTaskReference.get();
+        }
+    }
 }

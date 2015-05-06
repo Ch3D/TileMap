@@ -1,9 +1,9 @@
 package com.android.ch3d.tilemap.model;
 
 import android.content.Context;
+import android.graphics.Canvas;
 import android.support.v4.app.FragmentActivity;
 import android.util.DisplayMetrics;
-import android.widget.ImageView;
 
 import com.android.ch3d.tilemap.R;
 import com.android.ch3d.tilemap.provider.TilesProvider;
@@ -43,8 +43,12 @@ public class TilesManager {
 		mImageDownloader.addImageCache(ImageCacheSimple.getInstance(context.getSupportFragmentManager(), cacheParams, defaultImageSize));
 	}
 
-	public void loadTile(int x, int y, ImageView imageView) {
-		mImageDownloader.loadImage(mTilesProvider.getTile(x, y).getImgUrl(), imageView);
+//	public void loadTile(int x, int y, ImageView imageView) {
+//		mImageDownloader.loadImage(mTilesProvider.getTile(x, y).getImgUrl(), imageView);
+//	}
+
+	public void drawBitmap(int x, int y, Canvas canvas) {
+		mImageDownloader.loadImage(mTilesProvider.getTile(x, y).getImgUrl(), new ImageWorker.Holder(canvas, x, y));
 	}
 
 	public void onPause() {
