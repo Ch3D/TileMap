@@ -9,7 +9,6 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 
 import com.android.ch3d.tilemap.BuildConfig;
 import com.android.ch3d.tilemap.R;
@@ -30,9 +29,9 @@ public class TileView extends View {
 
     private static final int DEFAULT_ROWS_COUNT = DEFAULT_COLUMNS_COUNT;
 
-    private int mTileWidth;
+    private int mTileWidth = -1;
 
-    private int mTileHeight;
+    private int mTileHeight = -1;
 
     private int mColumnsCount;
 
@@ -103,11 +102,6 @@ public class TileView extends View {
     }
 
     private void init() {
-        setWillNotDraw(false);
-        setScrollContainer(true);
-        setVerticalScrollBarEnabled(true);
-        setHorizontalScrollBarEnabled(true);
-
         mToolbarHeight = getResources().getDimensionPixelSize(R.dimen.toolbar_height);
         mStatusBarHeight = 0;
         mNavBarHeight = Utils.getNavigationBarHeight(getContext());
@@ -120,14 +114,23 @@ public class TileView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        mTilesManager.drawBitmap(0, 0, canvas);
-        mTilesManager.drawBitmap(0, 1, canvas);
-        mTilesManager.drawBitmap(0, 2, canvas);
-        mTilesManager.drawBitmap(0, 3, canvas);
-        mTilesManager.drawBitmap(1, 0, canvas);
-        mTilesManager.drawBitmap(1, 1, canvas);
-        mTilesManager.drawBitmap(1, 2, canvas);
-        mTilesManager.drawBitmap(1, 3, canvas);
+
+        for (int i = mLastLeftIndexX; i < (mLastRightIndexX + 2); i++) {
+            for (int j = mLastTopIndexY; j < (mLastBottomIndexY + 2); j++) {
+                if (BuildConfig.DEBUG) {
+                    Log.d(TAG, "Trying to load tile for [" + i + ", " + j + "]");
+                }
+                mTilesManager.drawBitmap(i, j, canvas);
+            }
+        }
+
+//        mTilesManager.drawBitmap(0, 1, canvas);
+//        mTilesManager.drawBitmap(0, 2, canvas);
+//        mTilesManager.drawBitmap(0, 3, canvas);
+//        mTilesManager.drawBitmap(1, 0, canvas);
+//        mTilesManager.drawBitmap(1, 1, canvas);
+//        mTilesManager.drawBitmap(1, 2, canvas);
+//        mTilesManager.drawBitmap(1, 3, canvas);
     }
 
     @Override
@@ -162,7 +165,6 @@ public class TileView extends View {
                     scrollTo(newX, newY);
                     mTouchX = event.getX();
                     mTouchY = event.getY();
-                    invalidate();
                 }
                 mXPos = newX;
                 mYPos = newY;
@@ -201,34 +203,17 @@ public class TileView extends View {
             return;
         }
 
+
         if (BuildConfig.DEBUG) {
             Log.d(TAG, "Visible tiles x = [" + leftIndexX + ", " + rightIndexX + "]");
             Log.d(TAG, "Visible tiles y = [" + topIndexY + ", " + bottomIndexY + "]");
-        }
-
-        for (int i = leftIndexX; i < (rightIndexX + 2); i++) {
-            for (int j = topIndexY; j < (bottomIndexY + 2); j++) {
-                if (BuildConfig.DEBUG) {
-                    Log.d(TAG, "Trying to load tile for [" + i + ", " + j + "]");
-                }
-                final int index = getChildIndex(i, j);
-                if (index < getChildCount()) {
-                    // ImageView childAt = (ImageView) getChildAt(index);
-                    //if (childAt != null) {
-                        // mTilesManager.loadTile(i, j, childAt);
-                    // }
-                }
-            }
         }
 
         mLastLeftIndexX = leftIndexX;
         mLastRightIndexX = rightIndexX;
         mLastTopIndexY = topIndexY;
         mLastBottomIndexY = bottomIndexY;
-    }
 
-    private int getChildCount() {
-        return mRowsCount * mColumnsCount;
+        invalidate(0, 0, 100, 100);
     }
-
 }

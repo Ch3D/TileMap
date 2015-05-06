@@ -244,8 +244,8 @@ public abstract class ImageWorker {
                 if (BuildConfig.DEBUG) {
                     Log.d(TAG, "onPostExecute - setting bitmap");
                 }
-                value.draw(holder.getCanvas());
                 holder.setDrawable(value);
+                holder.getCanvas().drawBitmap(value.getBitmap(), holder.getX() * 256, holder.getY() * 256, null);
             }
         }
     }
