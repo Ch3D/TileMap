@@ -120,53 +120,19 @@ public class TileView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        mTilesManager.drawBitmap(0,0, canvas);
-        mTilesManager.drawBitmap(0,1, canvas);
-        mTilesManager.drawBitmap(0,2, canvas);
-        mTilesManager.drawBitmap(0,3, canvas);
-        mTilesManager.drawBitmap(1,0, canvas);
-        mTilesManager.drawBitmap(1,1, canvas);
-        mTilesManager.drawBitmap(1,2, canvas);
-        mTilesManager.drawBitmap(1,3, canvas);
-    }
-
-//    @Override
-//    protected void onLayout(final boolean changed, final int l, final int t, final int r, final int b) {
-//        int count = mRowsCount * mColumnsCount;
-//        int currentRow = 0;
-//        int column = 0;
-//        for (int i = 0; i < count; i++) {
-//            View child = getChildAt(i);
-//            if (child != null && child.getVisibility() != GONE) {
-//                child.layout(column, currentRow * mTileHeight, child.getMeasuredWidth() + column,
-//                        child.getMeasuredHeight() + (currentRow * mTileHeight));
-//                column += mTileWidth;
-//            }
-//            if ((i % mColumnsCount) == mColumnsCount - 1) {
-//                currentRow++;
-//                column = 0;
-//            }
-//        }
-//    }
-
-    private View getChildAt(final int i) {
-        return null;
+        mTilesManager.drawBitmap(0, 0, canvas);
+        mTilesManager.drawBitmap(0, 1, canvas);
+        mTilesManager.drawBitmap(0, 2, canvas);
+        mTilesManager.drawBitmap(0, 3, canvas);
+        mTilesManager.drawBitmap(1, 0, canvas);
+        mTilesManager.drawBitmap(1, 1, canvas);
+        mTilesManager.drawBitmap(1, 2, canvas);
+        mTilesManager.drawBitmap(1, 3, canvas);
     }
 
     @Override
     protected void onMeasure(final int widthMeasureSpec, final int heightMeasureSpec) {
         setMeasuredDimension(mTileWidth * mColumnsCount, mTileHeight * mRowsCount);
-
-        final int childCount = getChildCount();
-        for (int i = 0; i < childCount; i++) {
-            final View child = getChildAt(i);
-
-            if (child == null || child.getVisibility() == GONE) {
-                continue;
-            }
-
-            child.measure(mTileWidth, mTileHeight);
-        }
     }
 
     @Override
@@ -247,10 +213,10 @@ public class TileView extends View {
                 }
                 final int index = getChildIndex(i, j);
                 if (index < getChildCount()) {
-                    ImageView childAt = (ImageView) getChildAt(index);
-                    if (childAt != null) {
+                    // ImageView childAt = (ImageView) getChildAt(index);
+                    //if (childAt != null) {
                         // mTilesManager.loadTile(i, j, childAt);
-                    }
+                    // }
                 }
             }
         }
