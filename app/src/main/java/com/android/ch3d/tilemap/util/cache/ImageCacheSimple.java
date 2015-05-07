@@ -1,5 +1,6 @@
 package com.android.ch3d.tilemap.util.cache;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.support.v4.app.FragmentManager;
@@ -27,129 +28,133 @@ import static com.android.ch3d.tilemap.util.ImageUtils.decodeSampledBitmapFromDe
  */
 public class ImageCacheSimple extends ImageCacheBase {
 
-	public static ImageCacheSimple getInstance(FragmentManager fragmentManager, ImageCacheParams cacheParams, final int defaultImageSize) {
-		final ImageCacheBase.RetainFragment mRetainFragment = findOrCreateRetainFragment(fragmentManager);
-		ImageCacheSimple imageCache = (ImageCacheSimple) mRetainFragment.getObject();
-		if(imageCache == null) {
-			imageCache = new ImageCacheSimple(cacheParams, defaultImageSize);
-			mRetainFragment.setObject(imageCache);
-		}
-		return imageCache;
-	}
+    public static final String CACHE_DIR = "images";
 
-	private final Object mDiskCacheLock = new Object();
+    private File diskCacheDir;
 
-	private static final String TAG = ImageCacheSimple.class.getSimpleName();
+    public static ImageCacheSimple getInstance(Context context, FragmentManager fragmentManager, final int defaultImageSize) {
+        final ImageCacheBase.RetainFragment mRetainFragment = findOrCreateRetainFragment(fragmentManager);
+        ImageCacheSimple imageCache = (ImageCacheSimple) mRetainFragment.getObject();
+        if (imageCache == null) {
+            imageCache = new ImageCacheSimple(context, defaultImageSize);
+            mRetainFragment.setObject(imageCache);
+        }
+        return imageCache;
+    }
 
-	private static final boolean DEBUG = BuildConfig.DEBUG;
+    private final Object mDiskCacheLock = new Object();
 
-	private final int mImgSize;
+    private static final String TAG = ImageCacheSimple.class.getSimpleName();
 
-	private ImageCacheSimple(ImageCacheBase.ImageCacheParams cacheParams, int imgSize) {
-		mImgSize = imgSize;
-		init(cacheParams);
-	}
+    private static final boolean DEBUG = BuildConfig.DEBUG;
 
-	@Override
-	public void addBitmapToCache(final String data, final BitmapDrawable value) {
-		if(mMemoryCache != null) {
-			mMemoryCache.put(data, value);
-		}
+    private final Context mContext;
+    private final int mImgSize;
 
-		synchronized(mDiskCacheLock) {
-			final String key = hashKeyForDisk(data);
-			final File file = getFileForKey(key);
-			file.getParentFile().mkdirs();
-			OutputStream out = null;
-			try {
-				out = new FileOutputStream(file);
-				value.getBitmap().compress(mCacheParams.compressFormat, mCacheParams.compressQuality, out);
-				out.close();
-			} catch(final IOException e) {
-				Log.e(TAG, "addBitmapToCache", e);
-			} catch(Exception e) {
-				Log.e(TAG, "addBitmapToCache", e);
-			} finally {
-				Utils.close(out);
-			}
-		}
-	}
+    private ImageCacheSimple(Context context, int imgSize) {
+        this.mContext = context;
+        mImgSize = imgSize;
+        init();
+    }
 
-	@Override
-	public void clearCache() {
-		if(mMemoryCache != null) {
-			mMemoryCache.evictAll();
-			if(DEBUG) {
-				Log.d(TAG, "Memory cache cleared");
-			}
-		}
+    @Override
+    public void addBitmapToCache(final String data, final BitmapDrawable value) {
+        if (mMemoryCache != null) {
+            mMemoryCache.put(data, value);
+        }
 
-		synchronized(mDiskCacheLock) {
-			mCacheParams.diskCacheDir.delete();
-		}
-	}
+        synchronized (mDiskCacheLock) {
+            final String key = hashKeyForDisk(data);
+            final File file = getFileForKey(key);
+            file.getParentFile().mkdirs();
+            OutputStream out = null;
+            try {
+                out = new FileOutputStream(file);
+                value.getBitmap().compress(DEFAULT_COMPRESS_FORMAT, DEFAULT_COMPRESS_QUALITY, out);
+                out.close();
+            } catch (final IOException e) {
+                Log.e(TAG, "addBitmapToCache", e);
+            } catch (Exception e) {
+                Log.e(TAG, "addBitmapToCache", e);
+            } finally {
+                Utils.close(out);
+            }
+        }
+    }
 
-	@Override
-	public Bitmap getBitmapFromDiskCache(final String data) {
-		final String key = hashKeyForDisk(data);
-		Bitmap bitmap = null;
+    @Override
+    public void clearCache() {
+        if (mMemoryCache != null) {
+            mMemoryCache.evictAll();
+            if (DEBUG) {
+                Log.d(TAG, "Memory cache cleared");
+            }
+        }
 
-		synchronized(mDiskCacheLock) {
-			InputStream inputStream = null;
-			try {
-				if(DEBUG) {
-					Log.d(TAG, "Disk cache hit");
-				}
+        synchronized (mDiskCacheLock) {
+            diskCacheDir.delete();
+        }
+    }
 
-				final File fileForKey = getFileForKey(key);
-				if(!fileForKey.exists()) {
-					return null;
-				}
+    @Override
+    public Bitmap getBitmapFromDiskCache(final String data) {
+        final String key = hashKeyForDisk(data);
+        Bitmap bitmap = null;
 
-				inputStream = new FileInputStream(fileForKey);
-				if(inputStream != null) {
-					FileDescriptor fd = ((FileInputStream) inputStream).getFD();
-					// provide MAX_VALUE to skip sampling
-					bitmap = decodeSampledBitmapFromDescriptor(fd, mImgSize, mImgSize, this);
-				}
-			} catch(final IOException e) {
-				Log.e(TAG, "getBitmapFromDiskCache - " + e);
-			} finally {
-				Utils.close(inputStream);
-			}
-			return bitmap;
-		}
-	}
+        synchronized (mDiskCacheLock) {
+            InputStream inputStream = null;
+            try {
+                if (DEBUG) {
+                    Log.d(TAG, "Disk cache hit");
+                }
 
-	private File getFileForKey(final String key) {
-		return new File(mCacheParams.diskCacheDir + File.separator + key);
-	}
+                final File fileForKey = getFileForKey(key);
+                if (!fileForKey.exists()) {
+                    return null;
+                }
 
-	private void init(final ImageCacheBase.ImageCacheParams cacheParams) {
-		mCacheParams = cacheParams;
+                inputStream = new FileInputStream(fileForKey);
+                if (inputStream != null) {
+                    FileDescriptor fd = ((FileInputStream) inputStream).getFD();
+                    // provide MAX_VALUE to skip sampling
+                    bitmap = decodeSampledBitmapFromDescriptor(fd, mImgSize, mImgSize, this);
+                }
+            } catch (final IOException e) {
+                Log.e(TAG, "getBitmapFromDiskCache - " + e);
+            } finally {
+                Utils.close(inputStream);
+            }
+            return bitmap;
+        }
+    }
 
-		mCacheParams.diskCacheDir.mkdirs();
+    @Override
+    public File getDiskCacheDir() {
+        return diskCacheDir;
+    }
 
-		if(mCacheParams.memoryCacheEnabled) {
-			if(BuildConfig.DEBUG) {
-				Log.d(TAG, "Memory cache created (size = " + mCacheParams.memCacheSize + ")");
-			}
-			if(Utils.hasHoneycomb()) {
-				mReusableBitmaps = Collections.synchronizedSet(new HashSet<SoftReference<Bitmap>>());
-			}
-			mMemoryCache = new LruCache<String, BitmapDrawable>(mCacheParams.memCacheSize) {
-				@Override
-				protected void entryRemoved(boolean evicted, String key,
-				                            BitmapDrawable oldValue, BitmapDrawable newValue) {
-					mReusableBitmaps.add(new SoftReference<Bitmap>(oldValue.getBitmap()));
-				}
+    private File getFileForKey(final String key) {
+        return new File(diskCacheDir + File.separator + key);
+    }
 
-				@Override
-				protected int sizeOf(String key, BitmapDrawable value) {
-					final int bitmapSize = getBitmapSize(value) / 1024;
-					return bitmapSize == 0 ? 1 : bitmapSize;
-				}
-			};
-		}
-	}
+    private void init() {
+        diskCacheDir = getDiskCacheDir(mContext, CACHE_DIR);
+        diskCacheDir.mkdirs();
+        mReusableBitmaps = Collections.synchronizedSet(new HashSet<SoftReference<Bitmap>>());
+
+        final int maxSize = Utils.calculateMemoryCacheSize(mContext);
+        mMemoryCache = new LruCache<String, BitmapDrawable>(maxSize) {
+            @Override
+            protected void entryRemoved(boolean evicted, String key,
+                                        BitmapDrawable oldValue, BitmapDrawable newValue) {
+                mReusableBitmaps.add(new SoftReference<Bitmap>(oldValue.getBitmap()));
+            }
+
+            @Override
+            protected int sizeOf(String key, BitmapDrawable value) {
+                final int bitmapSize = getBitmapSize(value) / 1024;
+                return bitmapSize == 0 ? 1 : bitmapSize;
+            }
+        };
+    }
 }

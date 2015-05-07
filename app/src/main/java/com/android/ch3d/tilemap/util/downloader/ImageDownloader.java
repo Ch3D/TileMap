@@ -34,7 +34,7 @@ public class ImageDownloader extends ImageDownloaderBase {
 	}
 
 	private File getFileForKey(final String key) {
-		return new File(getImageCache().getParams().diskCacheDir + File.separator + key);
+		return new File(getImageCache().getDiskCacheDir() + File.separator + key);
 	}
 
 	@Override

@@ -16,6 +16,7 @@
 
 package com.android.ch3d.tilemap.util;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.res.Resources;
 import android.os.Build;
@@ -29,47 +30,54 @@ import java.io.IOException;
  * Created by Ch3D on 23.04.2015.
  */
 public final class Utils {
-	public static boolean hasGingerbread() {
-		return Build.VERSION.SDK_INT >= VERSION_CODES.GINGERBREAD;
-	}
+    public static boolean hasGingerbread() {
+        return Build.VERSION.SDK_INT >= VERSION_CODES.GINGERBREAD;
+    }
 
-	public static boolean hasHoneycomb() {
-		return Build.VERSION.SDK_INT >= VERSION_CODES.HONEYCOMB;
-	}
+    public static boolean hasHoneycomb() {
+        return Build.VERSION.SDK_INT >= VERSION_CODES.HONEYCOMB;
+    }
 
-	public static boolean hasKitKat() {
-		return Build.VERSION.SDK_INT >= VERSION_CODES.KITKAT;
-	}
+    public static boolean hasKitKat() {
+        return Build.VERSION.SDK_INT >= VERSION_CODES.KITKAT;
+    }
 
-	public static void close(Closeable closeable) {
-		if(closeable != null) {
-			try {
-				closeable.close();
-			} catch(IOException e) {
-				Log.e(TAG, "close", e);
-			}
-		}
-	}
+    public static void close(Closeable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (IOException e) {
+                Log.e(TAG, "close", e);
+            }
+        }
+    }
 
-	public static int getStatusBarHeight(Context context) {
-		int result = 0;
-		int resourceId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
-		if(resourceId > 0) {
-			result = context.getResources().getDimensionPixelSize(resourceId);
-		}
-		return result;
-	}
+    public static int calculateMemoryCacheSize(Context context) {
+        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        int memoryClass = am.getMemoryClass();
+        return 1024 * 1024 * memoryClass / 7;
+    }
 
-	public static int getNavigationBarHeight(Context context) {
-		Resources resources = context.getResources();
-		int resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
-		if(resourceId > 0) {
-			return resources.getDimensionPixelSize(resourceId);
-		}
-		return 0;
-	}
+    public static int getStatusBarHeight(Context context) {
+        int result = 0;
+        int resourceId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = context.getResources().getDimensionPixelSize(resourceId);
+        }
+        return result;
+    }
 
-	private static final String TAG = Utils.class.getSimpleName();
+    public static int getNavigationBarHeight(Context context) {
+        Resources resources = context.getResources();
+        int resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            return resources.getDimensionPixelSize(resourceId);
+        }
+        return 0;
+    }
 
-	private Utils() {}
+    private static final String TAG = Utils.class.getSimpleName();
+
+    private Utils() {
+    }
 }

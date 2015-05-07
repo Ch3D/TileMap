@@ -44,6 +44,12 @@ public class MainActivity extends AppCompatActivity {
 	public void onResume() {
 		super.onResume();
 		mTilesManager.onResume();
+	}
+
+	@Override
+	protected void onPostResume() {
+		super.onPostResume();
+		mTilesLayout.invalidate();
 		mTilesLayout.renderTiles();
 	}
 }

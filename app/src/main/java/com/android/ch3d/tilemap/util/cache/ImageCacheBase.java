@@ -49,36 +49,6 @@ public abstract class ImageCacheBase implements ImageCache {
 		}
 	}
 
-	public static class ImageCacheParams {
-		public File diskCacheDir;
-
-		public int memCacheSize = DEFAULT_MEM_CACHE_SIZE;
-
-		public int diskCacheSize = DEFAULT_DISK_CACHE_SIZE;
-
-		public Bitmap.CompressFormat compressFormat = DEFAULT_COMPRESS_FORMAT;
-
-		public int compressQuality = DEFAULT_COMPRESS_QUALITY;
-
-		public boolean memoryCacheEnabled = DEFAULT_MEM_CACHE_ENABLED;
-
-		public boolean diskCacheEnabled = DEFAULT_DISK_CACHE_ENABLED;
-
-		public boolean initDiskCacheOnCreate = DEFAULT_INIT_DISK_CACHE_ON_CREATE;
-
-		public ImageCacheParams(Context context, String diskCacheDirectoryName) {
-			diskCacheDir = getDiskCacheDir(context, diskCacheDirectoryName);
-		}
-
-		public void setMemCacheSizePercent(float percent) {
-			if(percent < 0.01f || percent > 0.8f) {
-				throw new IllegalArgumentException("setMemCacheSizePercent - percent must be between 0.01 and 0.8 (inclusive)");
-			}
-			memCacheSize = Math.round(percent * Runtime.getRuntime().maxMemory() / 1024);
-		}
-
-	}
-
 	@TargetApi(Build.VERSION_CODES.KITKAT)
 	static boolean canUseForInBitmap(Bitmap candidate, BitmapFactory.Options targetOptions) {
 		if(!Utils.hasKitKat()) {
@@ -180,25 +150,13 @@ public abstract class ImageCacheBase implements ImageCache {
 
 	private static final String TAG = "ImageCacheBase";
 
-	private static final boolean DEFAULT_MEM_CACHE_ENABLED = true;
+	public static final Bitmap.CompressFormat DEFAULT_COMPRESS_FORMAT = Bitmap.CompressFormat.JPEG;
 
-	private static final boolean DEFAULT_DISK_CACHE_ENABLED = true;
-
-	private static final boolean DEFAULT_INIT_DISK_CACHE_ON_CREATE = true;
-
-	private static final int DEFAULT_MEM_CACHE_SIZE = 1024 * 8; // 5MB
-
-	private static final int DEFAULT_DISK_CACHE_SIZE = 1024 * 1024 * 10; // 10MB
-
-	private static final Bitmap.CompressFormat DEFAULT_COMPRESS_FORMAT = Bitmap.CompressFormat.JPEG;
-
-	private static final int DEFAULT_COMPRESS_QUALITY = 70;
+	public static final int DEFAULT_COMPRESS_QUALITY = 70;
 
 	protected LruCache<String, BitmapDrawable> mMemoryCache;
 
 	protected Set<SoftReference<Bitmap>> mReusableBitmaps;
-
-	protected ImageCacheBase.ImageCacheParams mCacheParams;
 
 	@Override
 	public BitmapDrawable getBitmapFromMemCache(final String data) {
@@ -237,10 +195,5 @@ public abstract class ImageCacheBase implements ImageCache {
 		}
 
 		return bitmap;
-	}
-
-	@Override
-	public ImageCacheParams getParams() {
-		return mCacheParams;
 	}
 }

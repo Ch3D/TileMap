@@ -4,6 +4,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 
+import java.io.File;
+
 /**
  * Created by Ch3D on 23.04.2015.
  */
@@ -44,5 +46,5 @@ public interface ImageCache {
 	 */
 	Bitmap getBitmapFromReusableSet(BitmapFactory.Options options);
 
-	ImageCacheBase.ImageCacheParams getParams();
+	File getDiskCacheDir();
 }
