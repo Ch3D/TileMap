@@ -3,14 +3,14 @@ package com.android.ch3d.tilemap.model;
 /**
  * Created by Ch3D on 23.04.2015.
  */
-public class Tile {
+public abstract class Tile {
 	private final int mX;
 
 	private final int mY;
 
 	private final String mImgUrl;
 
-	Tile(int x, int y, String imgUrl) {
+	protected Tile(int x, int y, String imgUrl) {
 		mX = x;
 		mY = y;
 		mImgUrl = imgUrl;

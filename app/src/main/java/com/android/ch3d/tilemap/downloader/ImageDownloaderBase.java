@@ -1,9 +1,7 @@
-package com.android.ch3d.tilemap.util.downloader;
+package com.android.ch3d.tilemap.downloader;
 
 import android.content.Context;
 import android.util.Log;
-
-import com.android.ch3d.tilemap.util.ImageWorker;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;

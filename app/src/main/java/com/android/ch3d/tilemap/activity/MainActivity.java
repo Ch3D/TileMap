@@ -4,29 +4,38 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
 import com.android.ch3d.tilemap.R;
+import com.android.ch3d.tilemap.downloader.ImageDownloader;
 import com.android.ch3d.tilemap.model.TilesManager;
-import com.android.ch3d.tilemap.provider.OpenCycleMapTileProvider;
+import com.android.ch3d.tilemap.model.ocm.OpenCycleMapTileProvider;
+import com.android.ch3d.tilemap.util.cache.ImageCacheSimple;
 import com.android.ch3d.tilemap.widget.TileLayout;
 
 public class MainActivity extends AppCompatActivity {
 
 	private TileLayout mTilesLayout;
 
-	private OpenCycleMapTileProvider mTilesProvider;
-
 	private TilesManager mTilesManager;
+
+	private OpenCycleMapTileProvider mTilesProvider;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+		final int gridSize = getResources().getInteger(R.integer.config_tiles_grid_size);
+
 		mTilesLayout = (TileLayout) findViewById(R.id.tiles);
-		mTilesLayout.setGridSize(getResources().getInteger(R.integer.config_tiles_grid_size));
+		mTilesLayout.setGridSize(gridSize);
 		mTilesProvider = new OpenCycleMapTileProvider();
-		mTilesManager = new TilesManager(this, mTilesProvider);
+
+		final int defaultImageSize = getResources().getDimensionPixelSize(R.dimen.item_size);
+		final ImageDownloader mImageDownloader = new ImageDownloader(this, defaultImageSize);
+		mImageDownloader.setImageCache(ImageCacheSimple.getInstance(this, getSupportFragmentManager(), defaultImageSize));
+
+		mTilesManager = new TilesManager(mTilesProvider, mImageDownloader);
 		mTilesLayout.setTilesManager(mTilesManager);
-		mTilesLayout.initSize(getResources().getInteger(R.integer.config_tiles_count));
+		mTilesLayout.initSize(gridSize * gridSize);
 	}
 
 	@Override
@@ -35,21 +44,8 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	@Override
-	protected void onPause() {
-		super.onPause();
-		mTilesManager.onPause();
-	}
-
-	@Override
 	public void onResume() {
 		super.onResume();
-		mTilesManager.onResume();
-	}
-
-	@Override
-	protected void onPostResume() {
-		super.onPostResume();
-		mTilesLayout.invalidate();
 		mTilesLayout.renderTiles();
 	}
 }

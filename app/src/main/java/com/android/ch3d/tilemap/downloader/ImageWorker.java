@@ -1,4 +1,4 @@
-package com.android.ch3d.tilemap.util;
+package com.android.ch3d.tilemap.downloader;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -26,20 +26,10 @@ public abstract class ImageWorker {
 
 	private ImageCache mImageCache;
 
-	private boolean mPaused = false;
-
-	protected boolean mPauseWork = false;
-
-	private final Object mPauseWorkLock = new Object();
-
 	protected Context mContext;
 
 	protected ImageWorker(Context context) {
 		mContext = context;
-	}
-
-	public void addImageCache(ImageCache cache) {
-		mImageCache = cache;
 	}
 
 	public boolean cancelPotentialWork(Object data, ImageView imageView) {
@@ -68,6 +58,10 @@ public abstract class ImageWorker {
 
 	protected ImageCache getImageCache() {
 		return mImageCache;
+	}
+
+	public void setImageCache(ImageCache cache) {
+		mImageCache = cache;
 	}
 
 	public void loadImage(final String url, final ImageView imageView) {
@@ -101,20 +95,6 @@ public abstract class ImageWorker {
 		td.startTransition(mContext.getResources().getInteger(android.R.integer.config_shortAnimTime));
 	}
 
-	public void setPauseWork(boolean pauseWork) {
-		synchronized(mPauseWorkLock) {
-			mPauseWork = pauseWork;
-			if(!mPauseWork) {
-				mPauseWorkLock.notifyAll();
-			}
-		}
-	}
-
-	public void setPaused(boolean paused) {
-		mPaused = paused;
-		setPauseWork(false);
-	}
-
 	private class BitmapWorkerTask extends AsyncTask<String, Void, BitmapDrawable> {
 		private final WeakReference<ImageView> imageViewReference;
 
@@ -134,20 +114,11 @@ public abstract class ImageWorker {
 			Bitmap bitmap = null;
 			BitmapDrawable drawable = null;
 
-			synchronized(mPauseWorkLock) {
-				while(mPauseWork && !isCancelled()) {
-					try {
-						mPauseWorkLock.wait();
-					} catch(InterruptedException e) {
-					}
-				}
-			}
-
-			if(mImageCache != null && !isCancelled() && getAttachedImageView() != null && !mPaused) {
+			if(mImageCache != null && !isCancelled() && getAttachedImageView() != null) {
 				bitmap = mImageCache.getBitmapFromDiskCache(mUrl);
 			}
 
-			if(bitmap == null && !isCancelled() && getAttachedImageView() != null && !mPaused) {
+			if(bitmap == null && !isCancelled() && getAttachedImageView() != null) {
 				bitmap = processBitmap(mUrl);
 			}
 
@@ -171,16 +142,8 @@ public abstract class ImageWorker {
 		}
 
 		@Override
-		protected void onCancelled(final BitmapDrawable value) {
-			super.onCancelled(value);
-			synchronized(mPauseWorkLock) {
-				mPauseWorkLock.notifyAll();
-			}
-		}
-
-		@Override
 		protected void onPostExecute(BitmapDrawable value) {
-			if(isCancelled() || mPaused) {
+			if(isCancelled()) {
 				value = null;
 			}
 

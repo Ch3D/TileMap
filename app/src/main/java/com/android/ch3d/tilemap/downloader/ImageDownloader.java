@@ -1,4 +1,4 @@
-package com.android.ch3d.tilemap.util.downloader;
+package com.android.ch3d.tilemap.downloader;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -14,7 +14,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import static com.android.ch3d.tilemap.util.Utils.close;
-import static com.android.ch3d.tilemap.util.cache.ImageCacheBase.hashKeyForDisk;
+import static com.android.ch3d.tilemap.util.Utils.hashKeyForDisk;
 
 /**
  * Created by Ch3D on 24.04.2015.
@@ -23,13 +23,10 @@ public class ImageDownloader extends ImageDownloaderBase {
 
 	private static final String TAG = ImageDownloader.class.getSimpleName();
 
-	private final Context mContext;
-
 	private final int mImgSize;
 
 	public ImageDownloader(final Context context, final int imgSize) {
 		super(context);
-		mContext = context;
 		mImgSize = imgSize;
 	}
 
@@ -52,7 +49,7 @@ public class ImageDownloader extends ImageDownloaderBase {
 				outputStream = new FileOutputStream(file);
 				if(downloadUrlToStream(url, outputStream)) {
 					inputStream = new FileInputStream(file);
-					return ImageUtils.decodeSampledBitmapFromDescriptor(inputStream.getFD(), mImgSize, mImgSize, getImageCache());
+					return ImageUtils.decodeSampledBitmap(inputStream.getFD(), mImgSize, mImgSize, getImageCache());
 				}
 			} catch(FileNotFoundException e) {
 				Log.e(TAG, "processBitmap", e);
