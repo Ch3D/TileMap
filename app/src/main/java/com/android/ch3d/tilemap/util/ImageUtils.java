@@ -10,9 +10,6 @@ import com.android.ch3d.tilemap.util.cache.ImageCache;
 
 import java.io.FileDescriptor;
 
-/**
- * Created by Ch3D on 30.04.2015.
- */
 public class ImageUtils {
 
 	public static Bitmap decodeSampledBitmap(FileDescriptor fileDescriptor, int width, int height, ImageCache cache) {

@@ -32,9 +32,6 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-/**
- * Created by Ch3D on 23.04.2015.
- */
 public final class Utils {
 
 	public static boolean hasKitKat() {

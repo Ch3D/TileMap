@@ -1,8 +1,5 @@
 package com.android.ch3d.tilemap.model;
 
-/**
- * Created by Ch3D on 08.05.2015.
- */
 public class TileProviderType {
 
 	public static final TileProviderType OCM = new TileProviderType("OpenCycleMap");

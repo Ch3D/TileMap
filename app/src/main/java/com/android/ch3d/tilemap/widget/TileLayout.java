@@ -15,9 +15,6 @@ import com.android.ch3d.tilemap.R;
 import com.android.ch3d.tilemap.model.TilesManager;
 import com.android.ch3d.tilemap.util.Utils;
 
-/**
- * Created by Ch3D on 22.04.2015.
- */
 public class TileLayout extends ViewGroup {
 
 	public static final int PRELOAD_OFFSET = 2;

@@ -18,9 +18,6 @@ import java.lang.ref.SoftReference;
 import java.util.Iterator;
 import java.util.Set;
 
-/**
- * Created by Ch3D on 23.04.2015.
- */
 public abstract class ImageCacheBase implements ImageCache {
 
 	public static final Bitmap.CompressFormat DEFAULT_COMPRESS_FORMAT = Bitmap.CompressFormat.JPEG;

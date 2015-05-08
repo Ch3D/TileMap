@@ -2,9 +2,6 @@ package com.android.ch3d.tilemap.model;
 
 import com.android.ch3d.tilemap.model.ocm.OCMTileFactory;
 
-/**
- * Created by Ch3D on 23.04.2015.
- */
 public class TileFactory {
 	public static Tile create(final int x, final int y, final TileProviderType tileProvider) {
 		if(tileProvider == null) {

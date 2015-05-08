@@ -16,9 +16,6 @@ import java.io.IOException;
 import static com.android.ch3d.tilemap.util.Utils.close;
 import static com.android.ch3d.tilemap.util.Utils.hashKeyForDisk;
 
-/**
- * Created by Ch3D on 24.04.2015.
- */
 public class ImageDownloader extends ImageDownloaderBase {
 
 	private static final String TAG = ImageDownloader.class.getSimpleName();

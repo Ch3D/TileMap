@@ -6,9 +6,6 @@ import android.graphics.drawable.BitmapDrawable;
 
 import java.io.File;
 
-/**
- * Created by Ch3D on 23.04.2015.
- */
 public interface ImageCache {
 	void addBitmapToCache(String data, BitmapDrawable value);
 

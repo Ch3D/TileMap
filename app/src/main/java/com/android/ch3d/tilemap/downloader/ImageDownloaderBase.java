@@ -12,9 +12,6 @@ import java.net.URL;
 
 import static com.android.ch3d.tilemap.util.Utils.close;
 
-/**
- * Created by Ch3D on 28.04.2015.
- */
 public abstract class ImageDownloaderBase extends ImageWorker {
 
 	protected static final int BUFFER_SIZE = 8 * 1024;

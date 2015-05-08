@@ -2,9 +2,6 @@ package com.android.ch3d.tilemap.model.ocm;
 
 import com.android.ch3d.tilemap.model.Tile;
 
-/**
- * Created by Ch3D on 08.05.2015.
- */
 public class OCMTileFactory {
 
 	public static final String TILE_IMG_URL = "http://b.tile.opencyclemap.org/cycle/15/%s/%s.png";

@@ -24,9 +24,6 @@ import java.util.HashSet;
 
 import static com.android.ch3d.tilemap.util.ImageUtils.decodeSampledBitmap;
 
-/**
- * Created by Ch3D on 27.04.2015.
- */
 public class ImageCacheSimple extends ImageCacheBase {
 
 	public static final String CACHE_DIR = "images";

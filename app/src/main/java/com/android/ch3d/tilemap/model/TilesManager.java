@@ -6,9 +6,6 @@ import android.widget.ImageView;
 import com.android.ch3d.tilemap.BuildConfig;
 import com.android.ch3d.tilemap.downloader.ImageDownloader;
 
-/**
- * Created by Ch3D on 22.04.2015.
- */
 public class TilesManager {
 
 	private static final String TAG = TilesManager.class.getSimpleName();

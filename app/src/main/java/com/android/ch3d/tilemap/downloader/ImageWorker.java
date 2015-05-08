@@ -17,9 +17,6 @@ import com.android.ch3d.tilemap.util.cache.ImageCache;
 
 import java.lang.ref.WeakReference;
 
-/**
- * Created by Ch3D on 23.04.2015.
- */
 public abstract class ImageWorker {
 
 	private static final String TAG = ImageWorker.class.getSimpleName();
