@@ -95,8 +95,11 @@ public class TileLayout extends ViewGroup {
 		mDisplayWidth = displayMetrics.widthPixels;
 	}
 
-	public void initSize(final int count) {
-		for(int i = 0; i < count; i++) {
+	public void initSize(final int size) {
+		if(size < 0) {
+			throw new IllegalArgumentException("The size must be greater or equals to zero");
+		}
+		for(int i = 0; i < size; i++) {
 			addView(new ImageView(getContext()));
 		}
 	}
@@ -113,7 +116,8 @@ public class TileLayout extends ViewGroup {
 				             child.getMeasuredHeight() + (currentRow * mItemSize));
 				column += mItemSize;
 			}
-			if((i % mGridSize) == mGridSize - 1) {
+			final boolean isLastInRow = (i % mGridSize) == mGridSize - 1;
+			if(isLastInRow) {
 				currentRow++;
 				column = 0;
 			}
@@ -146,7 +150,8 @@ public class TileLayout extends ViewGroup {
 				mYPos += difY;
 
 				final int newX = Math.max(0, Math.min(mXPos, getMeasuredWidth() - mDisplayWidth));
-				final int newY = Math.max(0, Math.min(mYPos, getMeasuredHeight() - mDisplayHeight + mToolbarHeight + mNavBarHeight));
+				final int availableScreenHeight = mDisplayHeight + mToolbarHeight + mNavBarHeight;
+				final int newY = Math.max(0, Math.min(mYPos, getMeasuredHeight() - availableScreenHeight));
 
 				if(getScrollX() != newX || getScrollY() != newY) {
 					scrollTo(newX, newY);
@@ -204,8 +209,8 @@ public class TileLayout extends ViewGroup {
 				final int index = getChildIndex(i, j);
 				final ImageView child = (ImageView) getChildAt(index);
 
-				final boolean isVisible = (i >= leftIndexX) && (i < rightIndexX + PRELOAD_OFFSET) &&
-						(j >= topIndexY) && (j < bottomIndexY + PRELOAD_OFFSET);
+				final boolean isVisible =
+						(i >= leftIndexX) && (i < rightIndexX + PRELOAD_OFFSET) && (j >= topIndexY) && (j < bottomIndexY + PRELOAD_OFFSET);
 
 				child.setVisibility(isVisible ? VISIBLE : INVISIBLE);
 				if(isVisible) {
