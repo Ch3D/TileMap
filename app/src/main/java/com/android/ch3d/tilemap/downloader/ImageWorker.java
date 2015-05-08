@@ -13,7 +13,7 @@ import android.util.Log;
 import android.widget.ImageView;
 
 import com.android.ch3d.tilemap.BuildConfig;
-import com.android.ch3d.tilemap.util.cache.ImageCache;
+import com.android.ch3d.tilemap.cache.ImageCache;
 
 import java.lang.ref.WeakReference;
 

@@ -7,7 +7,7 @@ import com.android.ch3d.tilemap.R;
 import com.android.ch3d.tilemap.downloader.ImageDownloader;
 import com.android.ch3d.tilemap.model.TilesManager;
 import com.android.ch3d.tilemap.model.ocm.OpenCycleMapTileProvider;
-import com.android.ch3d.tilemap.util.cache.ImageCacheSimple;
+import com.android.ch3d.tilemap.cache.ImageCacheSimple;
 import com.android.ch3d.tilemap.widget.TileLayout;
 
 public class MainActivity extends AppCompatActivity {

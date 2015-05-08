@@ -1,4 +1,4 @@
-package com.android.ch3d.tilemap.util.cache;
+package com.android.ch3d.tilemap.cache;
 
 import android.content.Context;
 import android.graphics.Bitmap;

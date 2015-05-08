@@ -24,7 +24,7 @@ import android.os.Build.VERSION_CODES;
 import android.os.Environment;
 import android.util.Log;
 
-import com.android.ch3d.tilemap.util.cache.ImageCacheBase;
+import com.android.ch3d.tilemap.cache.ImageCacheBase;
 
 import java.io.Closeable;
 import java.io.File;

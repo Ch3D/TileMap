@@ -6,7 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 
-import com.android.ch3d.tilemap.util.cache.ImageCache;
+import com.android.ch3d.tilemap.cache.ImageCache;
 
 import java.io.FileDescriptor;
 
